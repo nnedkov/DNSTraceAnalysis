@@ -58,32 +58,42 @@ if __name__ == '__main__':
 
         contents.remove(content)
         contents.append((domain, class_type, ip_version))
+        content_domain, content_class_type, content_ip_version = content
 
         content_dir = './content_%s_%s' % (domain, ip_version)
         if not os.path.isdir(content_dir):
             os.makedirs(content_dir)
-
-        transactions = dict()
-        open_transactions = list()
-        internal_subview_traces = list()
-        external_subview_traces = list()
+        
+        # MAJOR HYPOTHESIS: I assume that for each transaction there is a
+        #                   request and a corresponding response
+        transaction_is_open_status = dict()
+        open_user_transactions = list()
+        in_view_traces = list()
+        in_view_pending_traces_queue = list()
+        ex_view_traces = list()
+        ex_view_pending_traces_queue = list()
 
         for i in range(9):
-            print i
             trace_file = '%s%s' % (trace_files_path_prefix, str(i))
+            
+            if i == 0:
+                print 'Processing content "%s":'
+            print '\tCurrently processing file %s' % trace_file
 
             with open(trace_file) as fp:
 
                 for line in fp:
                     trace_args = line.rstrip().split('\t')
 
-#                    datetime = trace_args[1]
-#                    acc_secs_since_epoch = convert_datetime_to_secs(datetime)
                     trace_domain = trace_args[7]
                     trace_class_type = trace_args[8]
                     trace_ip_version = trace_args[9]
 
-                    if trace_domain == content[0] and trace_class_type == content[1] and trace_ip_version == content[2]:
+                    if trace_domain == content_domain and \
+                       trace_class_type == content_class_type and \
+                       trace_ip_version == content_ip_version:
+                           
+                        trace_rec = ''
 #                        trace_rec = './%s%s:%s\t' % (trace_files_name_prefix, str(i), trace_args[0])
 #                        trace_rec += '%s\t%s\t%s\t%s\t%s\t' % (trace_args[1], trace_args[2], trace_args[3], trace_args[4], trace_args[5])
 #                        trace_rec += '%s\t%s\t%s\t%s\t%s\t' % (trace_args[6], trace_args[7], trace_args[8], trace_args[9], trace_args[10])
@@ -92,55 +102,122 @@ if __name__ == '__main__':
 #                        except IndexError:
 #                            trace_rec += '\n'
 
-                        frame_num = int(trace_args[0])
+#                       datetime = trace_args[1]
+#                       acc_secs_since_epoch = convert_datetime_to_secs(datetime)
                         src = trace_args[2]
                         dest = trace_args[3]
                         dns_is_dest = trace_args[3] == 'dns2-sop'
-                        transaction = trace_args[4]
+                        transaction_id = trace_args[4]
                         is_request = not int(trace_args[5])
                         answers_count = int(trace_args[6])
                         is_user = False
+                        is_internal = None
+
+                        # TODO: check the filtering of name resolution queries
+                        # procedure for any cases that it can fail
 
                         if dns_is_dest:
-                            if transaction in transactions:
-                                is_closed = transactions[transaction]
-                                is_user = is_closed
+                            if transaction_id in transaction_is_open_status:
+                                is_open = transaction_is_open_status[transaction_id]
+                                is_user = not is_open
                             else:
                                 is_user = True
+                                
+                            if is_user:
+                                is_internal = bool(int(trace_args[10]))
+
                         else:
-                            if transaction in transactions:
-                                is_closed = transactions[transaction]
-                                is_user = not is_closed
+                            if transaction_id in transaction_is_open_status:
+                                is_open = transaction_is_open_status[transaction_id]
+                                is_user = not not is_open
                             else:
                                 is_user = False
 
-                        if is_request and not is_user:
-                            assert len(set([True for src, trans1, trans2 in open_transactions if trans2 is None])) == 1, "%s\n%s" % (line, open_transactions)
+                            if is_user:
+                                is_internal = bool(int(trace_args[11]))
 
-                        if is_request and is_user:
-                            open_transactions.append((src, transaction, None))
-                            transactions[transaction] = False
-                        elif not is_request and is_user:
-                            for trans in list(open_transactions):
-                                if trans[0] == dest and trans[1] == transaction:
-                                    open_transactions.remove(trans)
-                            transactions[transaction] = True
-                        elif is_request and not is_user:
-                            last_transaction = open_transactions[-1]
-                            src, trans1, trans2 = last_transaction
-                            assert trans2 is None
-                            open_transactions[-1] = (src, trans1, transaction)
-                            transactions[transaction] = False
+
+                        if is_user and is_request:
+                            
+                            # mapping
+                            open_user_transactions.append((src, transaction_id, None))
+                            transaction_is_open_status[transaction_id] = True
+                            
+                            # writing
+                            if is_internal:
+                                if not in_view_pending_traces_queue:
+                                    in_view_traces.append(trace_rec)
+                                else:
+                                    pending = False
+                                    in_view_pending_traces_queue.append((trace_rec, transaction_id, pending))
+                            else:
+                                if not ex_view_pending_traces_queue:
+                                    ex_view_traces.append(trace_rec)
+                                else:
+                                    pending = False
+                                    ex_view_pending_traces_queue.append((trace_rec, transaction_id, pending))
+                            
+                        elif is_user and not is_request:
+                            
+                            # mapping
+                            for open_trans in list(open_user_transactions):
+                                open_trans_dest, open_trans_id, _ = open_trans
+                                if open_trans_dest == dest and open_trans_id == transaction_id:
+                                    open_user_transactions.remove(open_trans)
+                            transaction_is_open_status[transaction_id] = False
+
+                            # writing
+                            if is_internal:
+                                if not in_view_pending_traces_queue:
+                                    in_view_traces.append(trace_rec)
+                                else:
+                                    pending= False
+                                    in_view_pending_traces_queue.append((trace_rec, transaction_id, pending))
+                            elif not is_internal:
+                                if not ex_view_pending_traces_queue:
+                                    ex_view_traces.append(trace_rec)
+                                else:
+                                    pending = False
+                                    ex_view_pending_traces_queue.append((trace_rec, transaction_id, pending))
+                            else:
+                                assert False
+
+                        elif not is_user and is_request:
+                            
+                            # mapping
+                            assert len(set([True for _, _, trans_id2 in open_user_transactions if trans_id2 is None])) == 1, "%s\n%s" % (line, open_user_transactions)
+                            last_open_transaction = open_user_transactions[-1]
+                            src, trans_id1, trans_id2 = last_open_transaction
+                            assert trans_id2 is None
+                            open_user_transactions[-1] = (src, trans_id1, transaction_id)
+                            transaction_is_open_status[transaction_id] = True
+                            
+                            # writing
+                            if is_internal:
+                                pass
+                            elif not is_internal:
+                                pass
+                            else:
+                                assert False
+                            
                         elif not is_request and not is_user:
-                            transactions[transaction] = True
+                            
+                            # mapping
                             if answers_count == 0:
-                                for k, trans in enumerate(list(open_transactions)):
-                                    if trans[2] == transaction:
-                                        open_transactions[k] = (trans[0], trans[1], None)
-                                        #assert not (src == 'H20' and not is_request and transaction == '0xe635'), [open_transactions, answers_count]
+                                for j, open_trans in enumerate(open_user_transactions):
+                                    open_trans_dest, open_trans_id, associated_dns_trans_id = open_trans
+                                    if associated_dns_trans_id == transaction_id:
+                                        open_user_transactions[j] = (open_trans_dest, open_trans_id, None)
                                         break
-                        else:
-                            assert False        
+                            transaction_is_open_status[transaction_id] = False
+                            
+                            # writing
+                            if is_internal:
+                                pass
+                            elif not is_internal:
+                                pass
+                            else:
+                                assert False
                                 
 
                         # check the following: the transaction is not always consist of 2 operations. maybe even 4
