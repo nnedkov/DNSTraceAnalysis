@@ -80,7 +80,7 @@ function delete_trail_whitespaces_modified_files() {
 
 function check_modified_files() {
 	print "blue" "\n*** Running pychecker on modified files ***"
-	FILES=(`git status | awk '$1 == "modified:" { print head$2 }'`)
+	FILES=(`git status | awk '$1 == "modified:" { print head$2 }' | grep .py`)
 	for file in ${FILES[@]}; do
 		print "dark_green" "\nPychecking modified file: $file\n"
 		pychecker $file
@@ -101,10 +101,10 @@ function run_tests() {
 		key="${file%%:*}"
 		value="${file##*:}"
 		print "dark_green" "\n$key:"
-		diff "content_214_v4_0x0001/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" >/dev/null
+		diff "content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" >/dev/null
 		if (( $? == 1 )); then
 			print "red" "Not correct"
-			diff "content_214_v4_0x0001/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" > "logs/$value.diff"
+			diff "content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" > "logs/$value.diff"
 		else
 			echo "Correct"
 		fi
