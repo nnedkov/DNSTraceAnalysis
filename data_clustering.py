@@ -7,460 +7,103 @@
 
 ''' docstring to be filled '''
 
-from config import trace_files_dir, trace_files_name_prefix
+from config import TRACE_FILES_DIR, TRACE_FILES_NAME_PREFIX, \
+                   TRACE_FILES_NUMBER, RESULTS_DIR, VERBOSITY_IS_ON
 
-import os
-from time import strptime
-from calendar import timegm
+from data_dumping import dump_invalid_data, dump_distinct_users
 
-trace_files_path_prefix = '%s%s' % (trace_files_dir, trace_files_name_prefix)
+from trace import Trace
+from content import Content
 
+trace_files_path_prefix = '%s%s' % (TRACE_FILES_DIR, TRACE_FILES_NAME_PREFIX)
 
 
-def flush_buffer(trace_buffer, trace_dest):
-    for rec in list(trace_buffer):
-        trace_rec, transaction_id, pending = rec
-        if pending == True:
-            break
-        trace_dest.append(trace_rec)
-        trace_buffer.remove(rec)
 
+# TODO: check the filtering of name resolution queries
+#       procedure for any cases that it can fail
+# NOTICE: it is not taking account users of invalid content
+def get_all_content_ids():
+    content_ids = set()
 
-def convert_datetime_to_secs(datetime):
-    millisecs = datetime.split('.')[1]
-    time_obj = strptime(datetime, "%b %d, %Y %H:%M:%S.%f000")   # the object loses the millisecs
-    secs_since_epoch = timegm(time_obj)
-    acc_secs_since_epoch = '%s.%s' % (secs_since_epoch, millisecs)
-
-    return acc_secs_since_epoch
-
-
-def assert_results(trace_types_num, int_view_traces, ext_view_traces):
-    int_view_type_1_num = len([True for t_type, _ in int_view_traces if t_type == 1])
-    int_view_type_2_num = len([True for t_type, _ in int_view_traces if t_type == 2])
-    int_view_type_3_num = len([True for t_type, _ in int_view_traces if t_type == 3])
-    int_view_type_4_num = len([True for t_type, _ in int_view_traces if t_type == 4])
-
-    ext_view_type_1_num = len([True for t_type, _ in ext_view_traces if t_type == 1])
-    ext_view_type_2_num = len([True for t_type, _ in ext_view_traces if t_type == 2])
-    ext_view_type_3_num = len([True for t_type, _ in ext_view_traces if t_type == 3])
-    ext_view_type_4_num = len([True for t_type, _ in ext_view_traces if t_type == 4])
-
-    assert trace_types_num[1] == trace_types_num[4]
-    assert trace_types_num[2] == trace_types_num[3]
-    assert int_view_type_1_num == int_view_type_4_num
-    assert int_view_type_2_num == int_view_type_3_num
-    assert ext_view_type_1_num == ext_view_type_4_num
-    assert ext_view_type_2_num == ext_view_type_3_num
-
-
-def dump_results(is_internal_view, traces, content_dir, updated_content, in_secs=True):
-    view_dir = 'internal_view' if is_internal_view else 'external_view'
-    res_dir = '%s/%s' % (content_dir, view_dir)
-    if not os.path.isdir(res_dir):
-        os.makedirs(res_dir)
-    trace_type_dict = dict()
-    domain, ip_version, class_type = updated_content
-
-    for i in [1, 2, 3, 4]:
-        trace_type_dict[i] = list()
-        if i == 1:
-            filename = '%s/req_arr_%s_%s_%s.txt' % (res_dir, domain, ip_version, class_type)
-        elif i == 2:
-            filename = '%s/req_miss_%s_%s_%s.txt' % (res_dir, domain, ip_version, class_type)
-        elif i == 3:
-            filename = '%s/res_miss_%s_%s_%s.txt' % (res_dir, domain, ip_version, class_type)
-        elif i == 4:
-            filename = '%s/res_arr_%s_%s_%s.txt' % (res_dir, domain, ip_version, class_type)
-        trace_type_dict[i].append(filename)
-        trace_type_dict[i].append(list())
-
-    for trace_type, data in traces:
-        trace_recs = trace_type_dict[trace_type][1]
-        trace_recs.append(data)
-
-    for key, value in trace_type_dict.iteritems():
-        filename, trace_recs = value
-        if trace_recs:
-            dump_data_in_file(filename, trace_recs, in_secs)
-
-
-def dump_data_in_file(filename, data, in_secs):
-    with open(filename, 'w') as fp:
-        for elements in data:
-            for i, element in enumerate(elements):
-                if i == 0:
-                    if in_secs:
-                        fp.write('%s' % convert_datetime_to_secs(element))
-                    else:
-                        fp.write('%s' % element)
-                else:
-                    fp.write('\t%s' % element)
-
-            fp.write('\n')
-
-
-def dump_invalid_traces(invalid_traces, content_dir):
-    invalid_operations_log_name = '%s/invalid_operations.log' % content_dir
-
-    with open(invalid_operations_log_name, 'w') as fp:
-        for datatime in invalid_traces:
-            fp.write('%s\n' % datatime)
-
-
-def dump_distinct_users(is_internal_view, distinct_users, content_dir):
-    view_dir = 'internal_view' if is_internal_view else 'external_view'
-    distinct_users_dir = '%s/%s' % (content_dir, view_dir)
-    distinct_users_filename = '%s/distinct_users.txt' % distinct_users_dir
-
-    with open(distinct_users_filename, 'w') as fp:
-        for user in distinct_users:
-            fp.write('%s\n' % user)
-
-
-def get_trace_args_dict(trace_args):
-    trace_args_dict = dict()
-    trace_args_dict['trace_args'] = trace_args
-    trace_args_dict['datetime'] = trace_args[1]
-    trace_args_dict['src'] = trace_args[2]
-    trace_args_dict['dest'] = trace_args[3]
-    trace_args_dict['transaction_id'] = trace_args[4]
-    trace_args_dict['is_request'] = not int(trace_args[5])
-    trace_args_dict['answers_count'] = int(trace_args[6])
-    try:
-        trace_args_dict['ttl'] = trace_args[13]
-    except IndexError:
-        trace_args_dict['ttl'] = None
-    trace_args_dict['acc_secs_since_epoch'] = convert_datetime_to_secs(trace_args_dict['datetime'])
-    trace_args_dict['dns_is_dest'] = trace_args_dict['dest'] == 'dns2-sop'
-
-    if trace_args_dict['dns_is_dest']:
-        trace_args_dict['node'] = trace_args_dict['src']
-    else:
-        trace_args_dict['node'] = trace_args_dict['dest']
-
-    # (1) req_arr
-    if trace_args_dict['is_request'] and trace_args_dict['dns_is_dest']:
-        trace_args_dict['trace_type'] = 1
-        assert trace_args_dict['ttl'] is None
-    # (2) req_miss
-    elif trace_args_dict['is_request'] and not trace_args_dict['dns_is_dest']:
-        trace_args_dict['trace_type'] = 2
-        assert trace_args_dict['ttl'] is None
-    # (3) res_miss
-    elif not trace_args_dict['is_request'] and trace_args_dict['dns_is_dest']:
-        trace_args_dict['trace_type'] = 3
-        assert trace_args_dict['ttl'] is not None
-    # (4) res_arr
-    elif not trace_args_dict['is_request'] and not trace_args_dict['dns_is_dest']:
-        trace_args_dict['trace_type'] = 4
-        assert trace_args_dict['ttl'] is not None
-
-    return trace_args_dict
-
-
-def is_duplicated_trace(trace_args_dict, transaction_status):
-    if trace_args_dict['dns_is_dest']:
-        if trace_args_dict['transaction_id'] in transaction_status:
-            is_open, _, caution_data = transaction_status[trace_args_dict['transaction_id']]
-            cd_is_user, cd_src, cd_secs = caution_data
-
-            if is_open and cd_is_user == True and cd_src == trace_args_dict['src'] and \
-               float(trace_args_dict['acc_secs_since_epoch'])-float(cd_secs) < 1:
-                   return True
-
-            if not is_open and cd_is_user == True and cd_src == trace_args_dict['src'] and \
-               float(trace_args_dict['acc_secs_since_epoch'])-float(cd_secs) < 1 and trace_args_dict['answers_count'] > 0:
-                   return True
-
-    else:
-        if trace_args_dict['transaction_id'] in transaction_status:
-            is_open, _, caution_data = transaction_status[trace_args_dict['transaction_id']]
-            cd_is_user, cd_src, cd_secs = caution_data
-
-            if not is_open and cd_is_user == True and cd_src == trace_args_dict['dest'] and \
-               float(trace_args_dict['acc_secs_since_epoch'])-float(cd_secs) < 1:
-                   return True
-
-
-def get_content_metadata():
-    cmd = dict()
-
-    cmd['trace_types_num'] = dict()
-    cmd['transaction_status'] = dict()
-    cmd['invalid_traces'] = list()
-    cmd['open_user_transactions'] = list()
-    cmd['int_view_traces'] = list()
-    cmd['int_view_pending_traces_queue'] = list()
-    cmd['ext_view_traces'] = list()
-    cmd['ext_view_pending_traces_queue'] = list()
-    cmd['internal_users'] = set()
-    cmd['external_users'] = set()
-
-    return cmd
-
-
-def handle_req_arr(cmd, trace_args_dict, trace_rec):
-
-    # mapping
-    cmd['open_user_transactions'].append([trace_args_dict['src'], trace_args_dict['transaction_id'], None])
-    is_open = is_user = True
-    is_internal = bool(int(trace_args_dict['trace_args'][11]))
-    cmd['transaction_status'][trace_args_dict['transaction_id']] = [is_open, is_internal, [is_user, trace_args_dict['src'], trace_args_dict['acc_secs_since_epoch']]]
-
-    # writing
-    if is_internal:
-        if not cmd['int_view_pending_traces_queue']:
-            cmd['int_view_traces'].append(trace_rec)
-        else:
-            pending = False
-            cmd['int_view_pending_traces_queue'].append([trace_rec, trace_args_dict['transaction_id'], pending])
-    else:
-        if not cmd['ext_view_pending_traces_queue']:
-            cmd['ext_view_traces'].append(trace_rec)
-        else:
-            pending = False
-            cmd['ext_view_pending_traces_queue'].append([trace_rec, trace_args_dict['transaction_id'], pending])
-
-
-def handle_req_miss(cmd, trace_args_dict, trace_rec):
-
-    # mapping
-    assert len(set([True for _, _, ass_trans_id in cmd['open_user_transactions'] if ass_trans_id is None])) == 1, "%s" % cmd['open_user_transactions']
-    last_open_transaction = cmd['open_user_transactions'][-1]
-    _, user_trans_id, ass_trans_id = last_open_transaction
-    assert ass_trans_id is None
-    cmd['open_user_transactions'][-1][2] = trace_args_dict['transaction_id']
-    user_trans_is_open, user_trans_is_internal, _ = cmd['transaction_status'][user_trans_id]
-    assert user_trans_is_open
-    is_open = True
-    is_internal = user_trans_is_internal
-    is_user = False
-    cmd['transaction_status'][trace_args_dict['transaction_id']] = [is_open, is_internal, [is_user, trace_args_dict['src'], trace_args_dict['acc_secs_since_epoch']]]
-
-    # writing
-    pending= True
-    if is_internal:
-        cmd['int_view_pending_traces_queue'].append([trace_rec, trace_args_dict['transaction_id'], pending])
-    else:
-        cmd['ext_view_pending_traces_queue'].append([trace_rec, trace_args_dict['transaction_id'], pending])
-
-
-def handle_res_miss(cmd, trace_args_dict, trace_rec):
-
-    # mapping
-    if trace_args_dict['answers_count'] == 0:
-        for j, open_user_trans in enumerate(cmd['open_user_transactions']):
-            ass_trans_id = open_user_trans[2]
-            if ass_trans_id == trace_args_dict['transaction_id']:
-                cmd['open_user_transactions'][j][2] = None
-                break
-    cmd['transaction_status'][trace_args_dict['transaction_id']][0] = False
-
-    # writing
-    is_internal = cmd['transaction_status'][trace_args_dict['transaction_id']][1]
-    if trace_args_dict['answers_count'] == 0:
-        if is_internal:
-            for rec in list(cmd['int_view_pending_traces_queue']):
-                pending_trans_id = rec[1]
-                if trace_args_dict['transaction_id'] == pending_trans_id:
-                    cmd['int_view_pending_traces_queue'].remove(rec)
-                    break
-        else:
-            for rec in list(cmd['ext_view_pending_traces_queue']):
-                pending_trans_id = rec[1]
-                if trace_args_dict['transaction_id'] == pending_trans_id:
-                    cmd['ext_view_pending_traces_queue'].remove(rec)
-                    break
-    else:
-        if is_internal:
-            cmd['internal_users'].add(trace_args_dict['node'])
-            for rec in cmd['int_view_pending_traces_queue']:
-                pending_trans_id = rec[1]
-                if trace_args_dict['transaction_id'] == pending_trans_id:
-                    rec[2] = False
-                    break
-            pending = False
-            cmd['int_view_pending_traces_queue'].append([trace_rec, trace_args_dict['transaction_id'], pending])
-            flush_buffer(cmd['int_view_pending_traces_queue'], cmd['int_view_traces'])
-        else:
-            cmd['external_users'].add(trace_args_dict['node'])
-            for rec in cmd['ext_view_pending_traces_queue']:
-                pending_trans_id = rec[1]
-                if trace_args_dict['transaction_id'] == pending_trans_id:
-                    rec[2] = False
-                    break
-            pending = False
-            cmd['ext_view_pending_traces_queue'].append([trace_rec, trace_args_dict['transaction_id'], pending])
-            flush_buffer(cmd['ext_view_pending_traces_queue'], cmd['ext_view_traces'])
-
-
-def handle_res_arr(cmd, trace_args_dict, trace_rec):
-    # mapping
-    for open_trans in list(cmd['open_user_transactions']):
-        user_src, user_trans_id, _ = open_trans
-        if user_src == trace_args_dict['dest'] and user_trans_id == trace_args_dict['transaction_id']:
-            cmd['open_user_transactions'].remove(open_trans)
-    cmd['transaction_status'][trace_args_dict['transaction_id']][0] = False
-
-    # writing
-    is_internal = bool(int(trace_args_dict['trace_args'][12]))
-    if is_internal:
-        cmd['internal_users'].add(trace_args_dict['node'])
-        if not cmd['int_view_pending_traces_queue']:
-            cmd['int_view_traces'].append(trace_rec)
-        else:
-            pending= False
-            cmd['int_view_pending_traces_queue'].append([trace_rec, trace_args_dict['transaction_id'], pending])
-    else:
-        cmd['external_users'].add(trace_args_dict['node'])
-        if not cmd['ext_view_pending_traces_queue']:
-            cmd['ext_view_traces'].append(trace_rec)
-        else:
-            pending = False
-            cmd['ext_view_pending_traces_queue'].append([trace_rec, trace_args_dict['transaction_id'], pending])
-
-
-def process_content(content):
-    print 'Processing content "%s":' % str(content)
-
-    domain, class_type, ip_version = content
-
-    domain = domain[1:]
-    assert domain.isdigit()
-#    assert class_type == '0x0001'
-    assert ip_version == '0x0001' or ip_version == '0x001c'
-    ip_version = 'v4' if ip_version == '0x0001' else 'v6'
-
-    updated_content = (domain, ip_version, class_type)
-
-    content_domain, content_class_type, content_ip_version = content
-
-    content_dir = './content_%s_%s_%s' % (domain, ip_version, class_type)
-    if not os.path.isdir(content_dir):
-        os.makedirs(content_dir)
-
-    # MAJOR HYPOTHESIS: I assume that for each transaction there is one
-    #                   request and her corresponding response
-
-    cmd = get_content_metadata()
-
-    for i in range(9):
+    for i in range(TRACE_FILES_NUMBER):
         trace_file = '%s%s' % (trace_files_path_prefix, str(i))
-        print '\tProcessing file %s' % str(trace_file)
 
         with open(trace_file) as fp:
 
-            for line in fp:
-                trace_args = line.rstrip().split('\t')
+            for trace_str in fp:
+                trace = Trace(trace_str)
+                content_ids.add(trace.content_id)
 
-                trace_domain = trace_args[7]
-                trace_class_type = trace_args[8]
-                trace_ip_version = trace_args[9]
+    content_ids = list(content_ids)
+    content_ids.remove(('N214', '0x0001', '0x0001'))
+    content_ids.insert(0, ('N214', '0x0001', '0x0001'))
 
-                if trace_domain == content_domain and \
-                   trace_class_type == content_class_type and \
-                   trace_ip_version == content_ip_version:
 
-                    trace_args_dict = get_trace_args_dict(trace_args)
+def process_content(content_id):
+    if VERBOSITY_IS_ON:
+        print 'Processing content with id %s:' % str(content_id)
 
-                    try:
-                        cmd['trace_types_num'][trace_args_dict['trace_type']] += 1
-                    except:
-                        cmd['trace_types_num'][trace_args_dict['trace_type']] = 1
+    content = Content(content_id)
 
-                    trace_rec = (trace_args_dict['trace_type'], [trace_args_dict['datetime']])
-                    if trace_args_dict['ttl'] is not None:
-                        trace_rec[1].append(trace_args_dict['ttl'])
+    for i in range(TRACE_FILES_NUMBER):
+        trace_file = '%s%s' % (trace_files_path_prefix, str(i))
 
-                    # handling the duplicated req/res
-                    # (which carry the same transaction_id)
-                    if is_duplicated_trace(trace_args_dict, cmd['transaction_status']):
-                        cmd['trace_types_num'][trace_args_dict['trace_type']] -= 1
-                        cmd['invalid_traces'].append(trace_args_dict['datetime'])
+        if VERBOSITY_IS_ON:
+            print '\tProcessing file %s' % str(trace_file)
+
+        with open(trace_file) as fp:
+
+            for trace_str in fp:
+                trace = Trace(trace_str)
+
+                if content.is_reffered_in_trace(trace):
+                    trace.fill_out()
+
+                    if content.is_trace_duplicate(trace):
+                        content.record_invalid_trace(trace)
                         continue
 
-                    # TODO: check the filtering of name resolution queries
-                    #       procedure for any cases that it can fail
+                    try:
+                        content.record_trace(trace)
+                    except AssertionError:
+                        content.is_valid = False
 
-                    # (1) req_arr
-                    if trace_args_dict['trace_type'] == 1:
-                        handle_req_arr(cmd, trace_args_dict, trace_rec)
-                    # (2) req_miss
-                    elif trace_args_dict['trace_type'] == 2:
-                        handle_req_miss(cmd, trace_args_dict, trace_rec)
-                    # (3) res_miss
-                    elif trace_args_dict['trace_type'] == 3:
-                        handle_res_miss(cmd, trace_args_dict, trace_rec)
-                    # (4) res_arr
-                    elif trace_args_dict['trace_type'] == 4:
-                        handle_res_arr(cmd, trace_args_dict, trace_rec)
+                        return content.get_results()
 
-    assert_results(cmd['trace_types_num'], cmd['int_view_traces'], cmd['ext_view_traces'])
+    try:
+        content.assert_clustered_data()
+    except AssertionError:
+        content.is_valid = False
 
-    if cmd['int_view_traces']:
-        assert not cmd['int_view_pending_traces_queue']
-        is_internal_view = True
-        dump_results(is_internal_view, cmd['int_view_traces'], content_dir, updated_content)
-        dump_distinct_users(is_internal_view, cmd['internal_users'], content_dir)
+    content.dump_clustered_data()
+    content.dump_invalid_traces()
 
-        if updated_content == ('214', 'v4', '0x0001'):
-            for_tests_dir = '%s/%s' % (content_dir, 'for_tests')
-            dump_results(is_internal_view, cmd['int_view_traces'], for_tests_dir, updated_content, in_secs=False)
-
-    if cmd['ext_view_traces']:
-        assert not cmd['ext_view_pending_traces_queue']
-        is_internal_view = False
-        dump_results(is_internal_view, cmd['ext_view_traces'], content_dir, updated_content)
-        dump_distinct_users(is_internal_view, cmd['external_users'], content_dir)
-
-    if cmd['invalid_traces']:
-        dump_invalid_traces(cmd['invalid_traces'], content_dir)
-
-    return cmd['internal_users'], cmd['external_users']
-
+    return content.get_results()
 
 
 if __name__ == '__main__':
 
-    contents = set()
+#    content_ids = get_all_content_ids()
+    content_ids = [('N214', '0x0001', '0x0001'), ('N2062', '0x0001', '0x0001'), ('N11845', '0x0001', '0x0001')]#, ('N4992', '0x0001', '0x0001'), ('N19787', '0x0001', '0x0001'), ('N344', '0x0001', '0x0001')]
 
-#    for i in range(9):
-#        trace_file = '%s%s' % (trace_files_path_prefix, str(i))
-#
-#        with open(trace_file) as fp:
-#
-#            for line in fp:
-#                trace_args = line.rstrip().split('\t')
-#
-#                domain = trace_args[7]
-#                class_type = trace_args[8]
-#                ip_version = trace_args[9]
-#
-#                contents.add((domain, class_type, ip_version))
-#
-#    contents = list(contents)
-#    contents.remove(('N214', '0x0001', '0x0001'))
-#    contents.insert(0, ('N214', '0x0001', '0x0001'))
-
-    contents = [('N214', '0x0001', '0x0001'), ('N2062', '0x0001', '0x0001')]#, ('N4992', '0x0001', '0x0001'), ('N11845', '0x0001', '0x0001'), ('N19787', '0x0001', '0x0001'), ('N344', '0x0001', '0x0001')]
-
-    if not contents:
+    if not content_ids:
         raise Exception('No contents')
 
-    overall_int_users = set()
-    overall_ext_users = set()
+    invalid_content_ids = list()
+    int_users = set()
+    ext_users = set()
 
-    for content in contents:
-        int_users, ext_users = process_content(content)
+    for content_id in content_ids:
+        cnt_is_valid, cnt_int_users, cnt_ext_users = process_content(content_id)
 
-        overall_int_users |= int_users
-        overall_ext_users |= ext_users
+        if not cnt_is_valid:
+            invalid_content_ids.append(content_id)
+            continue
 
-    root_dir = '.'
+        int_users |= cnt_int_users
+        ext_users |= cnt_ext_users
 
-    is_internal_view = True
-    dump_distinct_users(is_internal_view, overall_int_users, root_dir)
+    dump_invalid_data(invalid_content_ids, RESULTS_DIR, filename_suffix='contents')
 
-    is_internal_view = False
-    dump_distinct_users(is_internal_view, overall_ext_users, root_dir)
+    dump_distinct_users(int_users, RESULTS_DIR, is_internal_view=True)
+    dump_distinct_users(ext_users, RESULTS_DIR, is_internal_view=False)

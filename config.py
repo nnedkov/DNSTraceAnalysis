@@ -7,5 +7,10 @@
 
 ''' docstring to be filled '''
 
-trace_files_dir = '/home/nedko/Inria/DNS_traces/'
-trace_files_name_prefix = 'dns2-sop-00'
+VERBOSITY_IS_ON = True
+
+TRACE_FILES_DIR = '/home/nedko/Inria/DNS_traces/'
+TRACE_FILES_NAME_PREFIX = 'dns2-sop-00'
+TRACE_FILES_NUMBER = 9
+
+RESULTS_DIR = '.'
