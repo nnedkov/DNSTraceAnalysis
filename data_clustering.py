@@ -33,17 +33,32 @@ def get_all_content_ids():
     content_ids.insert(0, ('N214', '0x0001', '0x0001'))
 
 
+def process_traces_for_content(content_id, traces):
+    content = Content(content_id)
+
+    for trace in traces:
+        process_next = content.process_trace(trace)
+
+        if not process_next:
+            return content.get_results()
+
+    content.assert_and_dump_clusters()
+
+    return content.get_results()
+
+
 def process_content(content_id):
     if VERBOSITY_IS_ON:
         print 'Processing content with id %s:' % str(content_id)
 
     content = Content(content_id)
+    traces = list()
 
     for i in range(TRACE_FILES_NUMBER):
         trace_file = '%s%s' % (trace_files_path_prefix, str(i))
 
         if VERBOSITY_IS_ON:
-            print '\tProcessing file %s' % str(trace_file)
+            print '\tFiltering traces from file %s' % str(trace_file)
 
         with open(trace_file) as fp:
 
@@ -51,32 +66,12 @@ def process_content(content_id):
                 trace = Trace(trace_str)
 
                 if content.is_reffered_in_trace(trace):
-                    trace.fill_out()
+                    traces.append(trace)
 
-                    if content.trace_is_duplicate(trace):
-                        content.record_invalid_trace(trace)
-                        continue
-
-                    try:
-                        content.record_trace(trace)
-                    except AssertionError:
-                        content.is_valid = False
-
-                        return content.get_results()
-
-    try:
-        content.assert_clustered_data()
-    except AssertionError:
-        content.is_valid = False
-
-    content.dump_clustered_data()
-    content.dump_invalid_traces()
-
-    return content.get_results()
+    return process_traces_for_content(content_id, traces)
 
 
-if __name__ == '__main__':
-
+def main():
 #    content_ids = get_all_content_ids()
     content_ids = [('N214', '0x0001', '0x0001'), ('N2062', '0x0001', '0x0001'), ('N11845', '0x0001', '0x0001')]#, ('N4992', '0x0001', '0x0001'), ('N19787', '0x0001', '0x0001'), ('N344', '0x0001', '0x0001')]
 
@@ -101,3 +96,7 @@ if __name__ == '__main__':
 
     dump_distinct_users(all_int_users, RESULTS_DIR, is_internal_view=True)
     dump_distinct_users(all_ext_users, RESULTS_DIR, is_internal_view=False)
+
+
+if __name__ == '__main__':
+    main()

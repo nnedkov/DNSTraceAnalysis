@@ -58,6 +58,34 @@ class Content:
         return False
 
 
+    def process_trace(self, trace):
+        trace.fill_out()
+
+        if self.trace_is_duplicate(trace):
+            self.record_invalid_trace(trace)
+            process_next = True
+
+            return process_next
+
+        try:
+            self.record_trace(trace)
+        except AssertionError:
+            self.is_valid = False
+            process_next = False
+
+            return process_next
+
+
+    def assert_and_dump_clusters(self):
+        try:
+            self.assert_clustered_data()
+        except AssertionError:
+            self.is_valid = False
+
+        self.dump_clustered_data()
+        self.dump_invalid_traces()
+
+
     def trace_is_duplicate(self, trace):
         # handling the req/res duplicates
         # (which carry the same transaction_id)

@@ -44,7 +44,7 @@ def res_miss_cluster_is_valid(res_miss_cluster):
     return True, None
 
 
-if __name__ == '__main__':
+def main():
     filename = sys.argv[1]
     flag = bool(int(sys.argv[2]))
     cluster = list()
@@ -62,3 +62,7 @@ if __name__ == '__main__':
     else:
         status, secs = res_miss_cluster_is_valid(cluster)
         assert status, secs
+
+
+if __name__ == '__main__':
+    main()
