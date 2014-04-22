@@ -101,10 +101,10 @@ function run_tests() {
 		key="${file%%:*}"
 		value="${file##*:}"
 		print "dark_green" "\n$key:"
-		diff "content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" >/dev/null
+		diff "results/content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" >/dev/null
 		if (( $? == 1 )); then
 			print "red" "Not correct"
-			diff "content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" > "logs/$value.diff"
+			diff "results/content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" > "logs/$value.diff"
 		else
 			echo "Correct"
 		fi

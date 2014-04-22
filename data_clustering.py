@@ -5,23 +5,17 @@
 #   April 2014                     #
 ####################################
 
-''' docstring to be filled '''
-
 from config import TRACE_FILES_DIR, TRACE_FILES_NAME_PREFIX, \
-                   TRACE_FILES_NUMBER, RESULTS_DIR, VERBOSITY_IS_ON
-
-from data_dumping import dump_invalid_data, dump_distinct_users
+                   TRACE_FILES_NUMBER, VERBOSITY_IS_ON, RESULTS_DIR
 
 from trace import Trace
 from content import Content
+from data_dumping import dump_invalid_data, dump_distinct_users
 
 trace_files_path_prefix = '%s%s' % (TRACE_FILES_DIR, TRACE_FILES_NAME_PREFIX)
 
 
 
-# TODO: check the filtering of name resolution queries
-#       procedure for any cases that it can fail
-# NOTICE: it is not taking account users of invalid content
 def get_all_content_ids():
     content_ids = set()
 
@@ -59,7 +53,7 @@ def process_content(content_id):
                 if content.is_reffered_in_trace(trace):
                     trace.fill_out()
 
-                    if content.is_trace_duplicate(trace):
+                    if content.trace_is_duplicate(trace):
                         content.record_invalid_trace(trace)
                         continue
 
@@ -90,20 +84,20 @@ if __name__ == '__main__':
         raise Exception('No contents')
 
     invalid_content_ids = list()
-    int_users = set()
-    ext_users = set()
+    all_int_users = set()
+    all_ext_users = set()
 
     for content_id in content_ids:
-        cnt_is_valid, cnt_int_users, cnt_ext_users = process_content(content_id)
+        is_valid, int_users, ext_users = process_content(content_id)
 
-        if not cnt_is_valid:
+        if not is_valid:
             invalid_content_ids.append(content_id)
             continue
 
-        int_users |= cnt_int_users
-        ext_users |= cnt_ext_users
+        all_int_users |= int_users
+        all_ext_users |= ext_users
 
-    dump_invalid_data(invalid_content_ids, RESULTS_DIR, filename_suffix='contents')
+    dump_invalid_data(invalid_content_ids, RESULTS_DIR, filename='invalid_contents')
 
-    dump_distinct_users(int_users, RESULTS_DIR, is_internal_view=True)
-    dump_distinct_users(ext_users, RESULTS_DIR, is_internal_view=False)
+    dump_distinct_users(all_int_users, RESULTS_DIR, is_internal_view=True)
+    dump_distinct_users(all_ext_users, RESULTS_DIR, is_internal_view=False)

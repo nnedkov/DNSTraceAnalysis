@@ -5,40 +5,60 @@
 #   April 2014                     #
 ####################################
 
-''' docstring to be filled '''
-
-from time_converter import convert_datetime_to_secs
+from os import sys
 
 
 
-def res_arr_are_valid(res_arr_traces):
-    previous_secs = None
-    previous_ttl = None
+def res_arr_cluster_is_valid(res_arr_cluster):
+    prev_secs = None
+    prev_ttl = None
 
-    for datetime, ttl in res_arr_traces:
-        acc_secs_since_epoch = float(convert_datetime_to_secs(datetime))
+    for secs_since_epoch, ttl in res_arr_cluster:
+        secs = float(secs_since_epoch)
         ttl = float(ttl)
-        if previous_secs is not None:
-            secs_diff = acc_secs_since_epoch - previous_secs
-            ttl_diff = ttl - previous_ttl
-            if secs_diff > ttl_diff:
-                return False
 
-        previous_secs = acc_secs_since_epoch
-        previous_ttl = ttl
+        if prev_secs is not None:
+            secs_diff = secs - prev_secs
+            ttl_diff = prev_ttl - ttl + float(2)
+            if not secs > prev_secs + prev_ttl - float(1) and secs_diff > ttl_diff:
+                return False, [secs_since_epoch, secs_diff, ttl_diff]
 
-    return True
+        prev_secs = secs
+        prev_ttl = ttl
+
+    return True, None
 
 
-def res_miss_are_valid(res_miss_traces):
-    previous_secs = None
+def res_miss_cluster_is_valid(res_miss_cluster):
+    prev_secs = None
 
-    for datetime, ttl in res_miss_traces:
-        acc_secs_since_epoch = float(convert_datetime_to_secs(datetime))
-        if previous_secs is not None and previous_secs > acc_secs_since_epoch:
-            return False
+    for secs_since_epoch, ttl in res_miss_cluster:
+        secs = float(secs_since_epoch)
+        ttl = float(ttl)
 
-        previous_secs = acc_secs_since_epoch + float(ttl)
+        if prev_secs is not None and prev_secs > secs + float(1):
+            return False, [secs_since_epoch, prev_secs, secs]
 
-    return True
-    
+        prev_secs = secs + ttl
+
+    return True, None
+
+
+if __name__ == '__main__':
+    filename = sys.argv[1]
+    flag = bool(int(sys.argv[2]))
+    cluster = list()
+
+    with open(filename) as fp:
+        for line in fp:
+            args = line.rstrip().split('\t')
+            secs_since_epoch = args[0]
+            ttl = args[1]
+            cluster.append((secs_since_epoch, ttl))
+
+    if flag:
+        status, secs = res_arr_cluster_is_valid(cluster)
+        assert status, secs
+    else:
+        status, secs = res_miss_cluster_is_valid(cluster)
+        assert status, secs
