@@ -60,10 +60,10 @@ class Content:
 
     def process_trace(self, trace):
         trace.fill_out()
+        process_next = True
 
         if self.trace_is_duplicate(trace):
             self.record_invalid_trace(trace)
-            process_next = True
 
             return process_next
 
@@ -74,6 +74,8 @@ class Content:
             process_next = False
 
             return process_next
+
+        return process_next
 
 
     def assert_and_dump_clusters(self):

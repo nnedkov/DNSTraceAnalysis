@@ -68,12 +68,14 @@ def process_content(content_id):
                 if content.is_reffered_in_trace(trace):
                     traces.append(trace)
 
-    return process_traces_for_content(content_id, traces)
+    res = process_traces_for_content(content_id, traces)
+
+    return res
 
 
 def main():
 #    content_ids = get_all_content_ids()
-    content_ids = [('N214', '0x0001', '0x0001'), ('N2062', '0x0001', '0x0001'), ('N11845', '0x0001', '0x0001')]#, ('N4992', '0x0001', '0x0001'), ('N19787', '0x0001', '0x0001'), ('N344', '0x0001', '0x0001')]
+    content_ids = [('N214', '0x0001', '0x0001')]#, ('N2062', '0x0001', '0x0001'), ('N11845', '0x0001', '0x0001')]#, ('N4992', '0x0001', '0x0001'), ('N19787', '0x0001', '0x0001'), ('N344', '0x0001', '0x0001')]
 
     if not content_ids:
         raise Exception('No contents')
