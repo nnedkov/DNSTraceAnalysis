@@ -10,9 +10,9 @@ from calendar import timegm
 
 
 
-def convert_datetime_to_secs(datetime):
-    millisecs = datetime.split('.')[1]
-    # the millisecs accuracy is lost in the below object
+def convert_datetime_to_secs(datetime, separator='.'):
+    # millisecs are stored because function strptime discards them
+    millisecs = datetime.split(separator)[1]
     time_obj = strptime(datetime, "%b %d, %Y %H:%M:%S.%f000")
     secs_since_epoch = timegm(time_obj)
     secs_since_epoch = '%s.%s' % (secs_since_epoch, millisecs)

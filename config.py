@@ -11,4 +11,5 @@ TRACE_FILES_DIR = '/home/nedko/Inria/DNS_traces/'
 TRACE_FILES_NAME_PREFIX = 'dns2-sop-00'
 TRACE_FILES_NUMBER = 9
 
+RUNNING_ON_HADOOP = False
 RESULTS_DIR = './results'

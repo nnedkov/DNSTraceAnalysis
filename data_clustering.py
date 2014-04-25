@@ -10,7 +10,7 @@ from config import TRACE_FILES_DIR, TRACE_FILES_NAME_PREFIX, \
 
 from trace import Trace
 from content import Content
-from data_dumping import dump_invalid_data, dump_distinct_users
+from data_dumping import dump_data, dump_users
 
 trace_files_path_prefix = '%s%s' % (TRACE_FILES_DIR, TRACE_FILES_NAME_PREFIX)
 
@@ -94,10 +94,11 @@ def main():
         all_int_users |= int_users
         all_ext_users |= ext_users
 
-    dump_invalid_data(invalid_content_ids, RESULTS_DIR, filename='invalid_contents')
+    filename = '%s/invalid_contents.log' % RESULTS_DIR
+    dump_data(invalid_content_ids, filename)
 
-    dump_distinct_users(all_int_users, RESULTS_DIR, is_internal_view=True)
-    dump_distinct_users(all_ext_users, RESULTS_DIR, is_internal_view=False)
+    dump_users(all_int_users, RESULTS_DIR, is_internal_view=True)
+    dump_users(all_ext_users, RESULTS_DIR, is_internal_view=False)
 
 
 if __name__ == '__main__':

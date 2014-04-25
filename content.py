@@ -8,7 +8,7 @@
 from config import RESULTS_DIR
 
 from tester import res_miss_cluster_is_valid, res_arr_cluster_is_valid
-from data_dumping import dump_distinct_users, dump_cluster_in_file, dump_invalid_data
+from data_dumping import dump_users, dump_cluster, dump_data
 
 import os
 
@@ -29,15 +29,15 @@ class Content:
         assert self.raw_ip_version == '0x0001' or \
                self.raw_ip_version == '0x001c'
         self.ip_version = 'v4' if self.raw_ip_version == '0x0001' else 'v6'
+
         self.id = (self.domain_name, \
                    self.ip_version, \
                    self.class_type)
-
         self.dir = '%s/content_%s_%s_%s' % (RESULTS_DIR, \
                                             self.domain_name, \
                                             self.ip_version, \
                                             self.class_type)
-
+        self.is_valid = True
         self.transaction_status = dict()
         self.trace_types_num = dict()
         self.open_user_transactions = list()
@@ -48,7 +48,6 @@ class Content:
         self.internal_users = set()
         self.external_users = set()
         self.invalid_traces = list()
-        self.is_valid = True
 
 
     def is_reffered_in_trace(self, trace):
@@ -78,13 +77,20 @@ class Content:
         return process_next
 
 
+    def get_results(self):
+        if self.is_valid:
+            return self.is_valid, self.internal_users, self.external_users
+        else:
+            return self.is_valid, None, None
+
+
     def assert_and_dump_clusters(self):
         try:
             self.assert_clustered_data()
         except AssertionError:
             self.is_valid = False
 
-        self.dump_clustered_data()
+        self.dump_clusters_and_users()
         self.dump_invalid_traces()
 
 
@@ -97,11 +103,11 @@ class Content:
                 cd_is_user, cd_src, cd_secs = caution_data
 
                 if is_open and cd_is_user and cd_src == trace.src and \
-                   float(trace.secs_since_epoch)-float(cd_secs) < 1:
+                   float(trace.secs)-float(cd_secs) < 1:
                        return True
 
                 if not is_open and cd_is_user and cd_src == trace.src and \
-                   float(trace.secs_since_epoch)-float(cd_secs) < 1 and trace.answers_num > 0:
+                   float(trace.secs)-float(cd_secs) < 1 and trace.answers_num > 0:
                        return True
 
         else:
@@ -110,7 +116,7 @@ class Content:
                 cd_is_user, cd_src, cd_secs = caution_data
 
                 if not is_open and cd_is_user and cd_src == trace.dst and \
-                   float(trace.secs_since_epoch)-float(cd_secs) < 1:
+                   float(trace.secs)-float(cd_secs) < 1:
                        return True
 
 
@@ -124,17 +130,13 @@ class Content:
         except:
             self.trace_types_num[trace.type] = 1
 
-        # (1) req_arr
-        if trace.type == 1:
+        if trace.type == 1:   # (1) req_arr
             self.record_req_arr(trace)
-        # (2) req_miss
-        elif trace.type == 2:
+        elif trace.type == 2:   # (2) req_miss
             self.record_req_miss(trace)
-        # (3) res_miss
-        elif trace.type == 3:
+        elif trace.type == 3:   # (3) res_miss
             self.record_res_miss(trace)
-        # (4) res_arr
-        elif trace.type == 4:
+        elif trace.type == 4:   # (4) res_arr
             self.record_res_arr(trace)
 
 
@@ -143,7 +145,7 @@ class Content:
         self.open_user_transactions.append([trace.src, trace.transaction_id, None])
         is_open = is_user = True
         is_internal = trace.src_is_internal
-        self.transaction_status[trace.transaction_id] = [is_open, is_internal, [is_user, trace.src, trace.secs_since_epoch]]
+        self.transaction_status[trace.transaction_id] = [is_open, is_internal, [is_user, trace.src, trace.secs]]
 
         # writing
         pending = False
@@ -171,7 +173,7 @@ class Content:
         is_open = True
         is_internal = user_trans_is_internal
         is_user = False
-        self.transaction_status[trace.transaction_id] = [is_open, is_internal, [is_user, trace.src, trace.secs_since_epoch]]
+        self.transaction_status[trace.transaction_id] = [is_open, is_internal, [is_user, trace.src, trace.secs]]
 
         # writing
         pending= True
@@ -269,15 +271,15 @@ class Content:
     def assert_clustered_data(self):
         int_view_type_1_num = len([True for trace in self.int_view_traces if trace.type == 1])
         int_view_type_2_num = len([True for trace in self.int_view_traces if trace.type == 2])
-        int_view_type_3 = [(trace.secs_since_epoch, trace.ttl) for trace in self.int_view_traces if trace.type == 3]
-        int_view_type_4 = [(trace.secs_since_epoch, trace.ttl) for trace in self.int_view_traces if trace.type == 4]
+        int_view_type_3 = [(trace.secs, trace.ttl) for trace in self.int_view_traces if trace.type == 3]
+        int_view_type_4 = [(trace.secs, trace.ttl) for trace in self.int_view_traces if trace.type == 4]
         int_view_type_3_num = len(int_view_type_3)
         int_view_type_4_num = len(int_view_type_4)
 
         ext_view_type_1_num = len([True for trace in self.ext_view_traces if trace.type == 1])
         ext_view_type_2_num = len([True for trace in self.ext_view_traces if trace.type == 2])
-        ext_view_type_3 = [(trace.secs_since_epoch, trace.ttl) for trace in self.ext_view_traces if trace.type == 3]
-        ext_view_type_4 = [(trace.secs_since_epoch, trace.ttl) for trace in self.ext_view_traces if trace.type == 4]
+        ext_view_type_3 = [(trace.secs, trace.ttl) for trace in self.ext_view_traces if trace.type == 3]
+        ext_view_type_4 = [(trace.secs, trace.ttl) for trace in self.ext_view_traces if trace.type == 4]
         ext_view_type_3_num = len(ext_view_type_3)
         ext_view_type_4_num = len(ext_view_type_4)
 
@@ -295,66 +297,56 @@ class Content:
         assert res_arr_cluster_is_valid(ext_view_type_4)[0]
 
 
-    def dump_clustered_data(self):
+    def dump_clusters_and_users(self):
         if self.int_view_traces:
             assert not self.int_view_pending_traces_queue
             is_internal_view = True
-            self.dump_results(is_internal_view, self.dir)
-            dump_distinct_users(self.internal_users, self.dir, is_internal_view)
+            self.dump_clusters(is_internal_view, self.dir)
+            dump_users(self.internal_users, self.dir, is_internal_view)
 
             if self.id == ('214', 'v4', '0x0001'):
                 dir_for_tests = '%s/%s' % (self.dir, 'for_tests')
-                self.dump_results(is_internal_view, dir_for_tests, in_secs=False)
+                self.dump_clusters(is_internal_view, dir_for_tests, in_secs=False)
 
         if self.ext_view_traces:
             assert not self.ext_view_pending_traces_queue
             is_internal_view = False
-            self.dump_results(is_internal_view, self.dir)
-            dump_distinct_users(self.external_users, self.dir, is_internal_view)
+            self.dump_clusters(is_internal_view, self.dir)
+            dump_users(self.external_users, self.dir, is_internal_view)
 
 
-    def dump_results(self, is_internal_view, res_dir, in_secs=True):
+    def dump_clusters(self, is_internal_view, root_dir, in_secs=True):
         view_dir = 'internal_view' if is_internal_view else 'external_view'
-        res_dir_path = '%s/%s' % (res_dir, view_dir)
-        if not os.path.isdir(res_dir_path):
-            os.makedirs(res_dir_path)
-
-        trace_type_dict = dict()
-        filename_suffix = '%s_%s_%s' % (self.domain_name, self.ip_version, self.class_type)
-
-        for i in range(1, 5):
-            trace_type_dict[i] = list()
-
-            if i == 1:
-                filename = '%s/req_arr_%s.txt' % (res_dir_path, filename_suffix)
-            elif i == 2:
-                filename = '%s/req_miss_%s.txt' % (res_dir_path, filename_suffix)
-            elif i == 3:
-                filename = '%s/res_miss_%s.txt' % (res_dir_path, filename_suffix)
-            elif i == 4:
-                filename = '%s/res_arr_%s.txt' % (res_dir_path, filename_suffix)
-
-            trace_type_dict[i].append(filename)
-            trace_type_dict[i].append(list())
+        res_dir = '%s/%s' % (root_dir, view_dir)
+        if not os.path.isdir(res_dir):
+            os.makedirs(res_dir)
 
         traces = self.int_view_traces if is_internal_view else self.ext_view_traces
-        for trace in traces:
-            cluster = trace_type_dict[trace.type][1]
-            cluster.append(trace)
+        clusters = dict()
 
-        for trace_type, value in trace_type_dict.iteritems():
-            filename, cluster = value
+        for trace in traces:
+            try:
+                clusters[trace.type].append(trace)
+            except KeyError:
+                clusters[trace.type] = [trace]
+
+        filename_prefix = { 1: 'req_arr',
+                            2: 'req_miss',
+                            3: 'res_miss',
+                            4: 'res_arr'}
+        filename_suffix = '%s_%s_%s' % (self.domain_name, \
+                                        self.ip_version, \
+                                        self.class_type)
+
+        for trace_type, cluster in clusters.iteritems():
             if cluster:
-                dump_cluster_in_file(cluster, filename, in_secs)
+                filename = '%s/%s_%s.txt' % (res_dir, \
+                                             filename_prefix[trace_type], \
+                                             filename_suffix)
+                dump_cluster(cluster, filename, in_secs)
 
 
     def dump_invalid_traces(self):
         if self.invalid_traces:
-            dump_invalid_data(self.invalid_traces, self.dir, filename='invalid_operations')
-
-
-    def get_results(self):
-        if self.is_valid:
-            return self.is_valid, self.internal_users, self.external_users
-        else:
-            return self.is_valid, None, None
+            filename = '%s/invalid_traces.log' % self.dir
+            dump_data(self.invalid_traces, filename)
