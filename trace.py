@@ -26,7 +26,7 @@ class Trace:
         self.datetime = self.args[1]
         self.secs = convert_datetime_to_secs(self.datetime)
 
-        return float(self.secs)
+        return self.secs
 
 
     def fill_out(self):

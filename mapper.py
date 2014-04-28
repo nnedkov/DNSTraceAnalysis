@@ -14,6 +14,10 @@ from sys import stdin, stdout
 def main(separator='\t'):
     for trace_str in stdin:
         trace = Trace(trace_str)
+        
+        if trace.content_id != ('N214', '0x0001', '0x0001'):
+            continue
+        
         output_line = '%s_%s_%s%s%s\n' % (trace.domain_name, \
                                           trace.class_type, \
                                           trace.ip_version, \

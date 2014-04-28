@@ -92,15 +92,15 @@ function check_modified_files() {
 # run tests
 
 function run_tests() {
-	CLUSTER_FILES=("req_arr_cluster":"req_arr_214_v4_0x0001"
-		       "req_miss_cluster":"req_miss_214_v4_0x0001"
-		       "res_miss_cluster":"res_miss_214_v4_0x0001"
-		       "res_arr_cluster":"res_arr_214_v4_0x0001")
+	CLUSTER_FILES=("req_arr":"req_arr_214_v4_0x0001"
+		       "req_miss":"req_miss_214_v4_0x0001"
+		       "res_miss":"res_miss_214_v4_0x0001"
+		       "res_arr":"res_arr_214_v4_0x0001")
 	print "blue" "\n*** Running tests ***"
 	for file in ${CLUSTER_FILES[@]}; do
 		key="${file%%:*}"
 		value="${file##*:}"
-		print "dark_green" "\n$key:"
+		print "dark_green" "\n$key (internal) cluster for (214, v4, 0x0001):"
 		diff "results/content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" >/dev/null
 		if (( $? == 1 )); then
 			print "red" "Not correct"
@@ -108,6 +108,18 @@ function run_tests() {
 		else
 			echo "Correct"
 		fi
+	done
+	CONTENT_DIRS=(`ls -d -1 ./results/**`)
+	for content_dir in ${CONTENT_DIRS[@]}; do
+		print "dark_green" "\nRunning tests on: $content_dir"
+		int_res_miss_cluster=`ls -d -1 $content_dir/internal_view/res_miss_*`
+		python tester.py $int_res_miss_cluster 0
+		int_res_arr_cluster=`ls -d -1 $content_dir/internal_view/res_arr_*`
+		python tester.py $int_res_arr_cluster 1
+		ext_res_miss_cluster=`ls -d -1 $content_dir/external_view/res_miss_*`
+		python tester.py $ext_res_miss_cluster 0
+		ext_res_arr_cluster=`ls -d -1 $content_dir/external_view/res_arr_*`
+		python tester.py $ext_res_arr_cluster 1
 	done
 	echo
 }

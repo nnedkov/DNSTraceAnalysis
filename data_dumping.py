@@ -5,7 +5,7 @@
 #   April 2014                     #
 ####################################
 
-from config import RUNNING_ON_HADOOP
+from config import RUNNING_ON_HADOOP, SEPARATOR
 
 import os
 
@@ -13,11 +13,11 @@ import os
 
 def dump_data(output, filename):
     if RUNNING_ON_HADOOP:
-        separator = '\n%s' % filename
-        output = '%s%s' % (filename, separator.join(output))
+        separator = '\n%s%s' % (filename, SEPARATOR)
+        output = '%s%s%s\n' % (filename, SEPARATOR, separator.join(output))
         os.sys.stdout.write(output)
     else:
-        output = '\n'.join(output)
+        output = '\n'.join(output) + '\n'
         with open(filename, 'w') as fp:
             fp.write(output)
 
@@ -27,8 +27,6 @@ def dump_cluster(cluster, filename, in_secs):
 
     for trace in cluster:
         line = ''
-        if RUNNING_ON_HADOOP:
-            line += filename
 
         if in_secs:
             line += trace.secs

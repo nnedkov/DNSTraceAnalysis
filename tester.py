@@ -59,10 +59,10 @@ def main(separator='\t'):
 
     if flag:
         status, message = res_arr_cluster_is_valid(cluster)
-        assert status, message
+        assert status, '%s: %s' % (filename, message)
     else:
         status, message = res_miss_cluster_is_valid(cluster)
-        assert status, message
+        assert status, '%s: %s' % (filename, message)
 
 
 if __name__ == '__main__':
