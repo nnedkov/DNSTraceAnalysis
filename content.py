@@ -283,8 +283,10 @@ class Content:
         ext_view_type_3_num = len(ext_view_type_3)
         ext_view_type_4_num = len(ext_view_type_4)
 
-        assert self.trace_types_num[1] == self.trace_types_num[4]
-        assert self.trace_types_num[2] == self.trace_types_num[3]
+        if 1 in self.trace_types_num or 4 in self.trace_types_num:
+            assert self.trace_types_num[1] == self.trace_types_num[4]
+        if 2 in self.trace_types_num or 3 in self.trace_types_num:
+            assert self.trace_types_num[2] == self.trace_types_num[3]
 
         assert int_view_type_1_num == int_view_type_4_num
         assert int_view_type_2_num == int_view_type_3_num

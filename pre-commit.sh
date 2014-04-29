@@ -112,14 +112,7 @@ function run_tests() {
 	CONTENT_DIRS=(`ls -d -1 ./results/**`)
 	for content_dir in ${CONTENT_DIRS[@]}; do
 		print "dark_green" "\nRunning tests on: $content_dir"
-		int_res_miss_cluster=`ls -d -1 $content_dir/internal_view/res_miss_*`
-		python tester.py $int_res_miss_cluster 0
-		int_res_arr_cluster=`ls -d -1 $content_dir/internal_view/res_arr_*`
-		python tester.py $int_res_arr_cluster 1
-		ext_res_miss_cluster=`ls -d -1 $content_dir/external_view/res_miss_*`
-		python tester.py $ext_res_miss_cluster 0
-		ext_res_arr_cluster=`ls -d -1 $content_dir/external_view/res_arr_*`
-		python tester.py $ext_res_arr_cluster 1
+		python tester.py $content_dir
 	done
 	echo
 }

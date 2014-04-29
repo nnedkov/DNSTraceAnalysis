@@ -18,7 +18,7 @@ def dump_data(output, filename):
         os.sys.stdout.write(output)
     else:
         output = '\n'.join(output) + '\n'
-        with open(filename, 'w') as fp:
+        with open(filename, 'a') as fp:
             fp.write(output)
 
 
