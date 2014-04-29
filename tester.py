@@ -5,7 +5,7 @@
 #   April 2014                     #
 ####################################
 
-from os import sys
+from os import sys, walk
 
 
 
@@ -45,24 +45,44 @@ def res_miss_cluster_is_valid(res_miss_cluster):
 
 
 def main(separator='\t'):
-    filename = sys.argv[1]
-    flag = bool(int(sys.argv[2]))
-    cluster = list()
 
-    with open(filename) as fp:
+    def load_res_cluster(filename):
+        cluster = list()
 
-        for line in fp:
-            args = line.strip().split(separator)
-            secs = args[0]
-            ttl = args[1]
-            cluster.append((secs, ttl))
+        with open(filename) as fp:
 
-    if flag:
-        status, message = res_arr_cluster_is_valid(cluster)
-        assert status, '%s: %s' % (filename, message)
-    else:
-        status, message = res_miss_cluster_is_valid(cluster)
-        assert status, '%s: %s' % (filename, message)
+            for line in fp:
+                args = line.strip().split(separator)
+                secs = args[0]
+                ttl = args[1]
+                cluster.append((secs, ttl))
+
+        return cluster
+
+
+    if len(sys.argv) < 2:
+        raise Exception('No content directory specified!')
+
+    content_dir = sys.argv[1]
+
+    for dirpath, _, filenames in walk(content_dir):
+
+        for filename in filenames:
+            if 'for_tests' in dirpath or not 'res_' in filename:
+                continue
+
+            is_res_arr = True if 'res_arr' in filename else False
+            cluster = load_res_cluster(dirpath + '/' + filename)
+
+            if is_res_arr:
+                success, invalid_rec = res_arr_cluster_is_valid(cluster)
+            else:
+                success, invalid_rec = res_miss_cluster_is_valid(cluster)
+
+            if success:
+                print 'Success!'
+            else:
+                print '%s : FAILURE!\t\t%s' % (filename, str(invalid_rec))
 
 
 if __name__ == '__main__':

@@ -19,16 +19,16 @@ clean:
 	rm -rf *.pyc *~
 
 cleanall:	clean
-		rm -rf *.pyc results logs
+		rm -rf results
 
 prepare:	cleanall
-		mkdir results logs
+		mkdir results
 
 run:	prepare
-	sed -i 's/RUNNING_ON_HADOOP = True/RUNNING_ON_HADOOP = False/g' ./config.py
-	python ./data_clustering.py
+	sed -i 's/RUNNING_ON_HADOOP = True/RUNNING_ON_HADOOP = False/g' config.py
+	python data_clustering.py
 
-test:	./results
+test:	results
 	./pre-commit.sh 4
 
 mapper_run:
@@ -38,7 +38,7 @@ reducer_run:	reducer_input.txt
 		cat reducer_input.txt | python reducer.py > reducer_output.txt
 
 hadoop_run:   prepare
-	      sed -i 's/RUNNING_ON_HADOOP = False/RUNNING_ON_HADOOP = True/g' ./config.py
+	      sed -i 's/RUNNING_ON_HADOOP = False/RUNNING_ON_HADOOP = True/g' config.py
 	      mapper_run
 	      reducer_run
 

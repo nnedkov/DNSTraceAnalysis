@@ -10,7 +10,7 @@ from config import RESULTS_DIR
 from tester import res_miss_cluster_is_valid, res_arr_cluster_is_valid
 from data_dumping import dump_users, dump_cluster, dump_data
 
-import os
+import traceback, os
 
 
 
@@ -38,6 +38,7 @@ class Content:
                                             self.ip_version, \
                                             self.class_type)
         self.is_valid = True
+        self.message = ''
         self.transaction_status = dict()
         self.trace_types_num = dict()
         self.open_user_transactions = list()
@@ -68,27 +69,31 @@ class Content:
 
         try:
             self.record_trace(trace)
-        except AssertionError:
+        except Exception:
             self.is_valid = False
+            self.message = traceback.format_exc()
             process_next = False
-
-            return process_next
 
         return process_next
 
 
     def get_results(self):
+        res_dict = dict()
         if self.is_valid:
-            return self.is_valid, self.internal_users, self.external_users
+            res_dict['internal_users'] = self.internal_users
+            res_dict['external_users'] = self.external_users
         else:
-            return self.is_valid, None, None
+            res_dict['message'] = self.message
+
+        return self.is_valid, res_dict
 
 
     def assert_and_dump_clusters(self):
         try:
             self.assert_clustered_data()
-        except AssertionError:
+        except Exception:
             self.is_valid = False
+            self.message = traceback.format_exc()
 
         self.dump_clusters_and_users()
         self.dump_invalid_traces()

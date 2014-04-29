@@ -79,31 +79,30 @@ def process_content(content_id):
 
 def main():
 #    content_ids = get_all_content_ids()
-    content_ids = [('N1211530', '0x0001', '0x001c')]#, ('N4992', '0x0001', '0x0001'), ('N19787', '0x0001', '0x0001'), ('N344', '0x0001', '0x0001')]
+    content_ids = [('N214', '0x0001', '0x0001')]#('N605093', '0x0001', '0x001c'),]#('N52540', '0x0001', '0x0001'), ('N508060', '0x0001', '0x0001'), ('N173510', '0x0001', '0x0001')] #, ('N1211530', '0x0001', '0x001c'), ('N4992', '0x0001', '0x0001'), ('N19787', '0x0001', '0x0001'), ('N344', '0x0001', '0x0001')]
 
     if not content_ids:
-        raise Exception('No contents')
+        raise Exception('No contents!')
 
     filename = '%s/invalid_contents.log' % RESULTS_DIR
     all_int_users = set()
     all_ext_users = set()
 
     for content_id in content_ids:
-        message = None
         try:
-            is_valid, int_users, ext_users = process_content(content_id)
+            is_valid, res = process_content(content_id)
+            if not is_valid:
+                message = '%s\n%s\n' % (str(content_id), res['message'])
         except Exception:
             is_valid = False
             message = '%s\n%s\n' % (str(content_id), traceback.format_exc())
 
         if not is_valid:
-            if message is None:
-                message = '%s\n' % str(content_id)
             dump_data([message], filename)
             continue
 
-        all_int_users |= int_users
-        all_ext_users |= ext_users
+        all_int_users |= res['internal_users']
+        all_ext_users |= res['external_users']
 
     dump_users(all_int_users, RESULTS_DIR, is_internal_view=True)
     dump_users(all_ext_users, RESULTS_DIR, is_internal_view=False)
