@@ -58,7 +58,7 @@ def process_content(content_id):
     content = Content(content_id)
     traces = list()
 
-    for i in range(TRACE_FILES_NUMBER):
+    for i in [2]:
         trace_file = '%s%s' % (trace_files_path_prefix, str(i))
 
         if VERBOSITY_IS_ON:
@@ -79,7 +79,7 @@ def process_content(content_id):
 
 def main():
 #    content_ids = get_all_content_ids()
-    content_ids = [('N214', '0x0001', '0x0001')]#('N605093', '0x0001', '0x001c'),]#('N52540', '0x0001', '0x0001'), ('N508060', '0x0001', '0x0001'), ('N173510', '0x0001', '0x0001')] #, ('N1211530', '0x0001', '0x001c'), ('N4992', '0x0001', '0x0001'), ('N19787', '0x0001', '0x0001'), ('N344', '0x0001', '0x0001')]
+    content_ids = [('N605093', '0x0001', '0x001c')]
 
     if not content_ids:
         raise Exception('No contents!')
@@ -92,10 +92,10 @@ def main():
         try:
             is_valid, res = process_content(content_id)
             if not is_valid:
-                message = '%s\n%s\n' % (str(content_id), res['message'])
+                message = 'Invalid content: %s\n%s\n' % (str(content_id), res['message'])
         except Exception:
             is_valid = False
-            message = '%s\n%s\n' % (str(content_id), traceback.format_exc())
+            message = 'Invalid content: %s\n%s\n' % (str(content_id), traceback.format_exc())
 
         if not is_valid:
             dump_data([message], filename)

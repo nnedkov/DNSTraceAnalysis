@@ -114,7 +114,7 @@ function run_tests() {
 	CONTENT_DIRS=(`ls -d -1 ./results/**`)
 	for content_dir in ${CONTENT_DIRS[@]}; do
 		print "dark_green" "\nRunning tests on: $content_dir"
-		python tester.py $content_dir | grep FAILURE
+		python tester.py $content_dir
 	done
 	echo
 }

@@ -10,36 +10,38 @@ from os import sys, walk
 
 
 def res_arr_cluster_is_valid(res_arr_cluster):
+    valid_until = None
     prev_secs = None
     prev_ttl = None
 
-    for secs_str, ttl_str in res_arr_cluster:
-        secs = float(secs_str)
-        ttl = float(ttl_str)
+    for current_time_str, current_ttl_str in res_arr_cluster:
+        current_time = float(current_time_str)
+        current_ttl = float(current_ttl_str)
 
-        if prev_secs is not None:
-            secs_diff = secs - prev_secs
-            ttl_diff = prev_ttl - ttl + 2
-            if not secs > prev_secs + prev_ttl - 1 and secs_diff > ttl_diff:
-                return False, [secs_str, secs_diff, ttl_diff]
+        if valid_until is not None:
+            secs_diff = current_time - prev_secs
+            ttl_diff = prev_ttl - current_ttl + 2
+            if not current_time > valid_until and secs_diff > ttl_diff:
+                return False, [current_time_str, secs_diff, ttl_diff]
 
-        prev_secs = secs
-        prev_ttl = ttl
+        valid_until = current_time + current_ttl - 1
+        prev_secs = current_time
+        prev_ttl = current_ttl
 
     return True, None
 
 
 def res_miss_cluster_is_valid(res_miss_cluster):
-    prev_secs = None
+    valid_until = None
 
-    for secs_str, ttl_str in res_miss_cluster:
-        secs = float(secs_str)
-        ttl = float(ttl_str)
+    for current_time_str, current_ttl_str in res_miss_cluster:
+        current_time = float(current_time_str)
+        current_ttl = float(current_ttl_str)
 
-        if prev_secs is not None and prev_secs > secs + 1:
-            return False, [secs_str, prev_secs, secs]
+        if valid_until is not None and not current_time > valid_until:
+            return False, [current_time_str, current_time, valid_until]
 
-        prev_secs = secs + ttl
+        valid_until = current_time + current_ttl - 1
 
     return True, None
 

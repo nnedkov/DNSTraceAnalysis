@@ -59,7 +59,11 @@ class Trace:
             assert self.ttl is None
         elif not self.is_request and self.nameserver_is_dst:   # (3) res_miss
             self.type = 3
-            assert self.ttl is not None
+            if self.answers_num == 0:
+                self.ttl = 0
+            assert self.ttl is not None, self.args
         elif not self.is_request and not self.nameserver_is_dst:   # (4) res_arr
             self.type = 4
+            if self.answers_num == 0:
+                self.ttl = 0
             assert self.ttl is not None

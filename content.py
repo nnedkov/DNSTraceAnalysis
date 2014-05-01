@@ -27,8 +27,14 @@ class Content:
 
         self.raw_ip_version = self.raw_id[2]
         assert self.raw_ip_version == '0x0001' or \
-               self.raw_ip_version == '0x001c'
-        self.ip_version = 'v4' if self.raw_ip_version == '0x0001' else 'v6'
+               self.raw_ip_version == '0x001c' or \
+               self.raw_ip_version == '0x000c'
+        if self.raw_ip_version == '0x0001':
+            self.ip_version = 'v4'
+        elif self.raw_ip_version == '0x001c':
+            self.ip_version = 'v6'
+        else:
+            self.ip_version = 'sec'
 
         self.id = (self.domain_name, \
                    self.ip_version, \
@@ -39,6 +45,7 @@ class Content:
                                             self.class_type)
         self.is_valid = True
         self.message = ''
+        self.traces_to_delete = list()
         self.transaction_status = dict()
         self.trace_types_num = dict()
         self.open_user_transactions = list()
@@ -95,6 +102,13 @@ class Content:
             self.is_valid = False
             self.message = traceback.format_exc()
 
+        if not self.int_view_traces and \
+           not self.int_view_pending_traces_queue and \
+           not self.ext_view_traces and \
+           not self.ext_view_pending_traces_queue:
+            self.is_valid = False
+            self.message = 'It\'s empty!'
+
         self.dump_clusters_and_users()
         self.dump_invalid_traces()
 
@@ -112,7 +126,7 @@ class Content:
                        return True
 
                 if not is_open and cd_is_user and cd_src == trace.src and \
-                   float(trace.secs)-float(cd_secs) < 1 and trace.answers_num > 0:
+                   float(trace.secs)-float(cd_secs) < 1:
                        return True
 
         else:
@@ -130,6 +144,7 @@ class Content:
 
 
     def record_trace(self, trace):
+        print '%s --- %s\n%s\t%s\n' % (trace.datetime, trace.type, str([trac.datetime for trac, _ in self.ext_view_pending_traces_queue]), str([trac.datetime for trac in self.ext_view_traces]))
         try:
             self.trace_types_num[trace.type] += 1
         except:
@@ -168,7 +183,11 @@ class Content:
 
     def record_req_miss(self, trace):
         # mapping
-        assert len(set([True for _, _, ass_trans_id in self.open_user_transactions if ass_trans_id is None])) == 1, "%s" % [self.open_user_transactions, trace.datetime]
+        ass_open_user_transactions_num = len(set([True for _, _, ass_trans_id in self.open_user_transactions if ass_trans_id is None]))
+        if ass_open_user_transactions_num == 0:
+            self.traces_to_delete.append(trace.transaction_id)
+            return
+        assert ass_open_user_transactions_num == 1, "%s" % [self.open_user_transactions, trace.datetime]
         last_open_transaction = self.open_user_transactions[-1]
         _, user_trans_id, ass_trans_id = last_open_transaction
         assert ass_trans_id is None
@@ -190,6 +209,9 @@ class Content:
 
     def record_res_miss(self, trace):
         # mapping
+        if self.traces_to_delete and trace.transaction_id in self.traces_to_delete:
+            self.traces_to_delete.remove(trace.transaction_id)
+            return
         if trace.answers_num == 0:
             for j, open_user_trans in enumerate(self.open_user_transactions):
                 ass_trans_id = open_user_trans[2]
@@ -245,22 +267,38 @@ class Content:
             if user_src == trace.dst and user_trans_id == trace.transaction_id:
                 self.open_user_transactions.remove(open_trans)
         self.transaction_status[trace.transaction_id][0] = False
+        self.transaction_status[trace.transaction_id][2][2] = trace.secs
 
         # writing
         is_internal = trace.dst_is_internal
-        pending= False
         if is_internal:
             self.internal_users.add(trace.node)
+
             if not self.int_view_pending_traces_queue:
                 self.int_view_traces.append(trace)
             else:
+                for pending_rec in self.int_view_pending_traces_queue:
+                    pending_trace = pending_rec[0]
+                    if trace.transaction_id == pending_trace.transaction_id:
+                        pending_rec[1] = False
+                        break
+                pending = False
                 self.int_view_pending_traces_queue.append([trace, pending])
+                self.flush_buffer(self.int_view_pending_traces_queue, self.int_view_traces)
+
         else:
             self.external_users.add(trace.node)
             if not self.ext_view_pending_traces_queue:
                 self.ext_view_traces.append(trace)
             else:
+                for pending_rec in self.ext_view_pending_traces_queue:
+                    pending_trace = pending_rec[0]
+                    if trace.transaction_id == pending_trace.transaction_id:
+                        pending_rec[1] = False
+                        break
+                pending = False
                 self.ext_view_pending_traces_queue.append([trace, pending])
+                self.flush_buffer(self.ext_view_pending_traces_queue, self.ext_view_traces)
 
 
     def flush_buffer(self, pending_traces_buffer, ready_traces):
@@ -291,7 +329,7 @@ class Content:
         if 1 in self.trace_types_num or 4 in self.trace_types_num:
             assert self.trace_types_num[1] == self.trace_types_num[4]
         if 2 in self.trace_types_num or 3 in self.trace_types_num:
-            assert self.trace_types_num[2] == self.trace_types_num[3]
+            assert self.trace_types_num[2] == self.trace_types_num[3], [self.trace_types_num[2], self.trace_types_num[3]]
 
         assert int_view_type_1_num == int_view_type_4_num
         assert int_view_type_2_num == int_view_type_3_num
@@ -306,7 +344,7 @@ class Content:
 
     def dump_clusters_and_users(self):
         if self.int_view_traces:
-            assert not self.int_view_pending_traces_queue
+            assert not self.int_view_pending_traces_queue, [trace.datetime for trace, _ in self.int_view_pending_traces_queue]
             is_internal_view = True
             self.dump_clusters(is_internal_view, self.dir)
             dump_users(self.internal_users, self.dir, is_internal_view)
@@ -316,7 +354,7 @@ class Content:
                 self.dump_clusters(is_internal_view, dir_for_tests, in_secs=False)
 
         if self.ext_view_traces:
-            assert not self.ext_view_pending_traces_queue
+            assert not self.ext_view_pending_traces_queue, [trace.datetime for trace, _ in self.ext_view_pending_traces_queue]
             is_internal_view = False
             self.dump_clusters(is_internal_view, self.dir)
             dump_users(self.external_users, self.dir, is_internal_view)
