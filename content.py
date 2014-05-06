@@ -47,7 +47,6 @@ class Content:
         self.message = ''
         self.traces_to_delete = list()
         self.transaction_status = dict()
-        self.trace_types_num = dict()
         self.open_user_transactions = list()
         self.int_view_traces = list()
         self.int_view_pending_traces_queue = list()
@@ -142,12 +141,6 @@ class Content:
 
 
     def record_trace(self, trace):
-        print '%s --- %s\n%s\t%s\n' % (trace.datetime, trace.type, str([trac.datetime for trac, _ in self.ext_view_pending_traces_queue]), str([trac.datetime for trac in self.ext_view_traces]))
-        try:
-            self.trace_types_num[trace.type] += 1
-        except:
-            self.trace_types_num[trace.type] = 1
-
         if trace.type == 1:   # (1) req_arr
             self.record_req_arr(trace)
         elif trace.type == 2:   # (2) req_miss
@@ -305,6 +298,7 @@ class Content:
                 if safe_mode:
                     break
                 else:
+                    pending_traces_buffer.remove(pending_rec)
                     continue
 
             ready_traces.append(trace)
@@ -328,11 +322,6 @@ class Content:
         ext_view_type_4 = [(trace.secs, trace.ttl) for trace in self.ext_view_traces if trace.type == 4]
         ext_view_type_3_num = len(ext_view_type_3)
         ext_view_type_4_num = len(ext_view_type_4)
-
-        if 1 in self.trace_types_num or 4 in self.trace_types_num:
-            assert self.trace_types_num[1] == self.trace_types_num[4]
-        if 2 in self.trace_types_num or 3 in self.trace_types_num:
-            assert self.trace_types_num[2] == self.trace_types_num[3], [self.trace_types_num[2], self.trace_types_num[3]]
 
         assert int_view_type_1_num == int_view_type_4_num
         assert int_view_type_2_num == int_view_type_3_num
@@ -374,6 +363,8 @@ class Content:
 
         for trace in traces:
             try:
+                if trace.type in [3, 4] and trace.ttl == 0:
+                    continue
                 clusters[trace.type].append(trace)
             except KeyError:
                 clusters[trace.type] = [trace]

@@ -58,7 +58,7 @@ def process_content(content_id):
     content = Content(content_id)
     traces = list()
 
-    for i in [2]:
+    for i in range(TRACE_FILES_NUMBER):
         trace_file = '%s%s' % (trace_files_path_prefix, str(i))
 
         if VERBOSITY_IS_ON:
@@ -79,7 +79,7 @@ def process_content(content_id):
 
 def main():
 #    content_ids = get_all_content_ids()
-    content_ids = [('N605093', '0x0001', '0x001c')]
+    content_ids = [('N214', '0x0001', '0x0001')]
 
     if not content_ids:
         raise Exception('No contents!')

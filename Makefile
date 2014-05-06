@@ -19,7 +19,7 @@ clean:
 	rm -rf *.pyc *~
 
 cleanall:	clean
-		rm -rf results
+		rm -rf results logs
 
 prepare:	cleanall
 		mkdir results
