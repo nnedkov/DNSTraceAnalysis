@@ -119,23 +119,21 @@ class Content:
         if trace.nameserver_is_dst:
             if trace.transaction_id in self.transaction_status:
                 is_open, _, caution_data = self.transaction_status[trace.transaction_id]
-                cd_is_user, cd_src, cd_secs = caution_data
+                cd_src, cd_secs = caution_data
 
-                if is_open and cd_is_user and cd_src == trace.src and \
+                if is_open and cd_src == trace.src and \
                    float(trace.secs)-float(cd_secs) < 1:
                        return True
 
-                if not is_open and cd_is_user and cd_src == trace.src and \
-                   float(trace.secs)-float(cd_secs) < 1:
+                if not is_open and float(trace.secs)-float(cd_secs) < 1:
                        return True
 
         else:
             if trace.transaction_id in self.transaction_status:
                 is_open, _, caution_data = self.transaction_status[trace.transaction_id]
-                cd_is_user, cd_src, cd_secs = caution_data
+                cd_src, cd_secs = caution_data
 
-                if not is_open and cd_is_user and cd_src == trace.dst and \
-                   float(trace.secs)-float(cd_secs) < 1:
+                if not is_open and float(trace.secs)-float(cd_secs) < 1:
                        return True
 
 
@@ -163,9 +161,9 @@ class Content:
     def record_req_arr(self, trace):
         # mapping
         self.open_user_transactions.append([trace.src, trace.transaction_id, None])
-        is_open = is_user = True
+        is_open = True
         is_internal = trace.src_is_internal
-        self.transaction_status[trace.transaction_id] = [is_open, is_internal, [is_user, trace.src, trace.secs]]
+        self.transaction_status[trace.transaction_id] = [is_open, is_internal, [trace.src, trace.secs]]
 
         # writing
         pending = False
@@ -187,7 +185,7 @@ class Content:
         if ass_open_user_transactions_num == 0:
             self.traces_to_delete.append(trace.transaction_id)
             return
-        assert ass_open_user_transactions_num == 1, "%s" % [self.open_user_transactions, trace.datetime]
+        assert ass_open_user_transactions_num == 1
         last_open_transaction = self.open_user_transactions[-1]
         _, user_trans_id, ass_trans_id = last_open_transaction
         assert ass_trans_id is None
@@ -196,8 +194,7 @@ class Content:
         assert user_trans_is_open
         is_open = True
         is_internal = user_trans_is_internal
-        is_user = False
-        self.transaction_status[trace.transaction_id] = [is_open, is_internal, [is_user, trace.src, trace.secs]]
+        self.transaction_status[trace.transaction_id] = [is_open, is_internal, [trace.src, trace.secs]]
 
         # writing
         pending= True
@@ -267,7 +264,7 @@ class Content:
             if user_src == trace.dst and user_trans_id == trace.transaction_id:
                 self.open_user_transactions.remove(open_trans)
         self.transaction_status[trace.transaction_id][0] = False
-        self.transaction_status[trace.transaction_id][2][2] = trace.secs
+        self.transaction_status[trace.transaction_id][2][1] = trace.secs
 
         # writing
         is_internal = trace.dst_is_internal
@@ -301,17 +298,23 @@ class Content:
                 self.flush_buffer(self.ext_view_pending_traces_queue, self.ext_view_traces)
 
 
-    def flush_buffer(self, pending_traces_buffer, ready_traces):
+    def flush_buffer(self, pending_traces_buffer, ready_traces, safe_mode=True):
         for pending_rec in list(pending_traces_buffer):
             trace, pending = pending_rec
             if pending:
-                break
+                if safe_mode:
+                    break
+                else:
+                    continue
 
             ready_traces.append(trace)
             pending_traces_buffer.remove(pending_rec)
 
 
     def assert_clustered_data(self):
+        self.flush_buffer(self.int_view_pending_traces_queue, self.int_view_traces, safe_mode=False)
+        self.flush_buffer(self.ext_view_pending_traces_queue, self.ext_view_traces, safe_mode=False)
+
         int_view_type_1_num = len([True for trace in self.int_view_traces if trace.type == 1])
         int_view_type_2_num = len([True for trace in self.int_view_traces if trace.type == 2])
         int_view_type_3 = [(trace.secs, trace.ttl) for trace in self.int_view_traces if trace.type == 3]
