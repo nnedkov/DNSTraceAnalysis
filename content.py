@@ -106,10 +106,11 @@ class Content:
            not self.ext_view_traces and \
            not self.ext_view_pending_traces_queue:
             self.is_valid = False
-            self.message = 'It\'s empty!'
+            self.message = "It's empty!"
 
-        self.dump_clusters_and_users()
-        self.dump_invalid_traces()
+        if self.is_valid:
+            self.dump_clusters_and_users()
+            self.dump_invalid_traces()
 
 
     def trace_is_duplicate(self, trace):
@@ -141,6 +142,7 @@ class Content:
 
 
     def record_trace(self, trace):
+#        print '%s --- %s\n%s\t%s\n%s\t%s\n' % (trace.datetime, trace.type, str([trac.datetime for trac, _ in self.ext_view_pending_traces_queue]), str([trac.datetime for trac in self.ext_view_traces]), str([trac.datetime for trac, _ in self.int_view_pending_traces_queue]), str([trac.datetime for trac in self.int_view_traces]))
         if trace.type == 1:   # (1) req_arr
             self.record_req_arr(trace)
         elif trace.type == 2:   # (2) req_miss
@@ -229,7 +231,6 @@ class Content:
                         break
         else:
             if is_internal:
-                self.internal_users.add(trace.node)
                 for pending_rec in self.int_view_pending_traces_queue:
                     pending_trace = pending_rec[0]
                     if trace.transaction_id == pending_trace.transaction_id:
@@ -239,7 +240,6 @@ class Content:
                 self.int_view_pending_traces_queue.append([trace, pending])
                 self.flush_buffer(self.int_view_pending_traces_queue, self.int_view_traces)
             else:
-                self.external_users.add(trace.node)
                 for pending_rec in self.ext_view_pending_traces_queue:
                     pending_trace = pending_rec[0]
                     if trace.transaction_id == pending_trace.transaction_id:
@@ -262,8 +262,6 @@ class Content:
         # writing
         is_internal = trace.dst_is_internal
         if is_internal:
-            self.internal_users.add(trace.node)
-
             if not self.int_view_pending_traces_queue:
                 self.int_view_traces.append(trace)
             else:
@@ -277,7 +275,6 @@ class Content:
                 self.flush_buffer(self.int_view_pending_traces_queue, self.int_view_traces)
 
         else:
-            self.external_users.add(trace.node)
             if not self.ext_view_pending_traces_queue:
                 self.ext_view_traces.append(trace)
             else:
@@ -339,6 +336,7 @@ class Content:
             assert not self.int_view_pending_traces_queue, [trace.datetime for trace, _ in self.int_view_pending_traces_queue]
             is_internal_view = True
             self.dump_clusters(is_internal_view, self.dir)
+            self.internal_users = set([trace.node for trace in self.int_view_traces if trace.type == 1])
             dump_users(self.internal_users, self.dir, is_internal_view)
 
             if self.id == ('214', 'v4', '0x0001'):
@@ -349,6 +347,7 @@ class Content:
             assert not self.ext_view_pending_traces_queue, [trace.datetime for trace, _ in self.ext_view_pending_traces_queue]
             is_internal_view = False
             self.dump_clusters(is_internal_view, self.dir)
+            self.external_users = set([trace.node for trace in self.ext_view_traces if trace.type == 1])
             dump_users(self.external_users, self.dir, is_internal_view)
 
 
