@@ -6,7 +6,8 @@
 ####################################
 
 from config import TRACE_FILES_DIR, TRACE_FILES_NAME_PREFIX, \
-                   TRACE_FILES_NUMBER, VERBOSITY_IS_ON, RESULTS_DIR
+                   TRACE_FILES_NUMBER, VERBOSITY_IS_ON, TEST_CONTENTS, \
+                   RESULTS_DIR
 
 from trace import Trace
 from content import Content
@@ -79,7 +80,7 @@ def process_content(content_id):
 
 def main():
 #    content_ids = get_all_content_ids()
-    content_ids = [('N214', '0x0001', '0x0001')]
+    content_ids = TEST_CONTENTS
 
     if not content_ids:
         raise Exception('No contents!')
@@ -104,8 +105,10 @@ def main():
         all_int_users |= res['internal_users']
         all_ext_users |= res['external_users']
 
-    dump_users(all_int_users, RESULTS_DIR, is_internal_view=True)
-    dump_users(all_ext_users, RESULTS_DIR, is_internal_view=False)
+    if all_int_users:
+        dump_users(all_int_users, RESULTS_DIR, is_internal_view=True)
+    if all_ext_users:
+        dump_users(all_ext_users, RESULTS_DIR, is_internal_view=False)
 
 
 if __name__ == '__main__':
