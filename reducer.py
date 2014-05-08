@@ -28,9 +28,8 @@ def main(separator='\t'):
     last_content = None
     traces = list()
     filename = '%s/invalid_contents.log' % RESULTS_DIR
-    invalid_contents = list()
-    all_int_users = set()
-    all_ext_users = set()
+    processed_contents_filename = '%s/processed_contents.log' % RESULTS_DIR
+    i = 1
 
     for input_line in stdin:
         content, trace_str = input_line.strip().split(separator, 1)
@@ -52,17 +51,19 @@ def main(separator='\t'):
             is_valid, res = process_content(last_content, traces)
             if not is_valid:
                 if res['message'] == "It's empty!":
-                    invalid_contents.append('%s: %s' % (last_content, res['message']))
+                    message = '%s: %s' % (last_content, res['message'])
                 else:
-                    invalid_contents.append(last_content)
+                    message = str(last_content)
         except Exception:
             is_valid = False
-            invalid_contents.append(last_content)
+            message = str(last_content)
 
-        if is_valid:
-            all_int_users |= res['internal_users']
-            all_ext_users |= res['external_users']
+        if not is_valid:
+            dump_data([message], filename)
 
+        print i
+        i += 1
+        dump_data([str(last_content)], processed_contents_filename)
         last_content = content
         traces = [trace]
 
@@ -71,23 +72,15 @@ def main(separator='\t'):
             is_valid, res = process_content(last_content, traces)
             if not is_valid:
                 if res['message'] == "It's empty!":
-                    invalid_contents.append('%s: %s' % (last_content, res['message']))
+                    message = '%s: %s' % (last_content, res['message'])
                 else:
-                    invalid_contents.append(last_content)
+                    message = str(last_content)
         except Exception:
             is_valid = False
-            invalid_contents.append(last_content)
+            message = str(last_content)
 
-        if is_valid:
-            all_int_users |= res['internal_users']
-            all_ext_users |= res['external_users']
-
-    if invalid_contents:
-        dump_data(invalid_contents, filename)
-    if all_int_users:
-        dump_users(all_int_users, RESULTS_DIR, is_internal_view=True)
-    if all_ext_users:
-        dump_users(all_ext_users, RESULTS_DIR, is_internal_view=False)
+        if not is_valid:
+            dump_data([message], filename)
 
 
 if __name__ == '__main__':
