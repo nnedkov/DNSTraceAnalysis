@@ -39,10 +39,11 @@ class Content:
         self.id = (self.domain_name, \
                    self.ip_version, \
                    self.class_type)
-        self.dir = '%s/content_%s_%s_%s' % (RESULTS_DIR, \
-                                            self.domain_name, \
-                                            self.ip_version, \
-                                            self.class_type)
+        self.dir = '%s/%s/content_%s_%s_%s' % (str(self.domain_name/1000),
+                                               RESULTS_DIR, \
+                                               self.domain_name, \
+                                               self.ip_version, \
+                                               self.class_type)
         self.is_valid = True
         self.message = ''
         self.traces_to_delete = list()
