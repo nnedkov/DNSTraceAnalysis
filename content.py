@@ -40,7 +40,7 @@ class Content:
                    self.ip_version, \
                    self.class_type)
         self.dir = '%s/%s/content_%s_%s_%s' % (RESULTS_DIR, \
-                                               str(int(self.domain_name) % 100000), \
+                                               str(int(self.domain_name) % 50000), \
                                        	       self.domain_name, \
                                                self.ip_version, \
                                                self.class_type)

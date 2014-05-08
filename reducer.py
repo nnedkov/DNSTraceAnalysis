@@ -30,6 +30,7 @@ def main(separator='\t'):
     filename = '%s/invalid_contents.log' % RESULTS_DIR
     processed_contents_filename = '%s/processed_contents.log' % RESULTS_DIR
     i = 1
+    start = False
 
     for input_line in stdin:
         content, trace_str = input_line.strip().split(separator, 1)
@@ -37,6 +38,13 @@ def main(separator='\t'):
 
         if DEBUG_HADOOP and content not in TEST_CONTENTS_STRINGS:
             continue
+
+        if not start:
+            if content == 'N1127467_0x0001_0x001c':
+                start = True
+                # continue
+            else:
+                continue
 
         trace = Trace(trace_str)
 
