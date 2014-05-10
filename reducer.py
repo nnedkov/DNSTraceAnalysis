@@ -40,7 +40,7 @@ def main(separator='\t'):
             continue
 
         if not start:
-            if content == 'N1127467_0x0001_0x001c':
+            if content == 'N965487_0x0001_0x0001':
                 start = True
                 # continue
             else:

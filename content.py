@@ -10,7 +10,7 @@ from config import RESULTS_DIR
 from tester import res_miss_cluster_is_valid, res_arr_cluster_is_valid
 from data_dumping import dump_users, dump_cluster, dump_data
 
-import traceback, os
+import traceback, os, shutil
 
 
 
@@ -44,6 +44,9 @@ class Content:
                                        	       self.domain_name, \
                                                self.ip_version, \
                                                self.class_type)
+        if os.path.isdir(self.dir):
+            shutil.rmtree(self.dir)
+
         if not os.path.isdir(self.dir):
             os.makedirs(self.dir)
 
