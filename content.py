@@ -63,6 +63,9 @@ class Content:
         self.external_users = set()
         self.invalid_traces = list()
 
+        self.ooop_int = None
+        self.ooop_ext = None
+
 
     def is_reffered_in_trace(self, trace):
         if trace.content_id == self.raw_id:
@@ -228,6 +231,7 @@ class Content:
                     if trace.transaction_id == pending_trace.transaction_id:
                         assert pending
                         self.int_view_pending_traces_queue.remove(pending_rec)
+                        self.ooop_int = pending_trace
                         break
             else:
                 for pending_rec in list(self.ext_view_pending_traces_queue):
@@ -235,6 +239,7 @@ class Content:
                     if trace.transaction_id == pending_trace.transaction_id:
                         assert pending
                         self.ext_view_pending_traces_queue.remove(pending_rec)
+                        self.ooop_ext = pending_trace
                         break
         else:
             if is_internal:
@@ -242,6 +247,7 @@ class Content:
                     pending_trace = pending_rec[0]
                     if trace.transaction_id == pending_trace.transaction_id:
                         pending_rec[1] = False
+                        self.ooop_int = None
                         break
                 pending = False
                 self.int_view_pending_traces_queue.append([trace, pending])
@@ -251,6 +257,7 @@ class Content:
                     pending_trace = pending_rec[0]
                     if trace.transaction_id == pending_trace.transaction_id:
                         pending_rec[1] = False
+                        self.ooop_ext = None
                         break
                 pending = False
                 self.ext_view_pending_traces_queue.append([trace, pending])
@@ -270,6 +277,9 @@ class Content:
         is_internal = trace.dst_is_internal
         if is_internal:
             if not self.int_view_pending_traces_queue:
+                if self.ooop_int is not None:
+                    self.int_view_traces.append(self.ooop_int)
+                    self.ooop_int = None
                 self.int_view_traces.append(trace)
             else:
                 for pending_rec in self.int_view_pending_traces_queue:
@@ -278,11 +288,17 @@ class Content:
                         pending_rec[1] = False
                         break
                 pending = False
+                if self.ooop_int is not None:
+                    self.int_view_pending_traces_queue.append([self.ooop_int, pending])
+                    self.ooop_int = None
                 self.int_view_pending_traces_queue.append([trace, pending])
                 self.flush_buffer(self.int_view_pending_traces_queue, self.int_view_traces)
 
         else:
             if not self.ext_view_pending_traces_queue:
+                if self.ooop_ext is not None:
+                    self.ext_view_traces.append(self.ooop_ext)
+                    self.ooop_ext = None
                 self.ext_view_traces.append(trace)
             else:
                 for pending_rec in self.ext_view_pending_traces_queue:
@@ -291,6 +307,9 @@ class Content:
                         pending_rec[1] = False
                         break
                 pending = False
+                if self.ooop_ext is not None:
+                    self.ext_view_pending_traces_queue.append([self.ooop_ext, pending])
+                    self.ooop_ext = None
                 self.ext_view_pending_traces_queue.append([trace, pending])
                 self.flush_buffer(self.ext_view_pending_traces_queue, self.ext_view_traces)
 
@@ -314,23 +333,23 @@ class Content:
         self.flush_buffer(self.ext_view_pending_traces_queue, self.ext_view_traces, safe_mode=False)
 
         int_view_type_1_num = len([True for trace in self.int_view_traces if trace.type == 1])
-        int_view_type_2_num = len([True for trace in self.int_view_traces if trace.type == 2])
+        #int_view_type_2_num = len([True for trace in self.int_view_traces if trace.type == 2])
         int_view_type_3 = [(trace.secs, trace.ttl) for trace in self.int_view_traces if trace.type == 3]
         int_view_type_4 = [(trace.secs, trace.ttl) for trace in self.int_view_traces if trace.type == 4]
-        int_view_type_3_num = len(int_view_type_3)
+        #int_view_type_3_num = len(int_view_type_3)
         int_view_type_4_num = len(int_view_type_4)
 
         ext_view_type_1_num = len([True for trace in self.ext_view_traces if trace.type == 1])
-        ext_view_type_2_num = len([True for trace in self.ext_view_traces if trace.type == 2])
+        #ext_view_type_2_num = len([True for trace in self.ext_view_traces if trace.type == 2])
         ext_view_type_3 = [(trace.secs, trace.ttl) for trace in self.ext_view_traces if trace.type == 3]
         ext_view_type_4 = [(trace.secs, trace.ttl) for trace in self.ext_view_traces if trace.type == 4]
-        ext_view_type_3_num = len(ext_view_type_3)
+        #ext_view_type_3_num = len(ext_view_type_3)
         ext_view_type_4_num = len(ext_view_type_4)
 
         assert int_view_type_1_num == int_view_type_4_num
-        assert int_view_type_2_num == int_view_type_3_num
+        #assert int_view_type_2_num == int_view_type_3_num
         assert ext_view_type_1_num == ext_view_type_4_num
-        assert ext_view_type_2_num == ext_view_type_3_num
+        #assert ext_view_type_2_num == ext_view_type_3_num
 
         assert res_miss_cluster_is_valid(int_view_type_3)[0]
         assert res_arr_cluster_is_valid(int_view_type_4)[0]

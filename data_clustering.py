@@ -80,7 +80,13 @@ def process_content(content_id):
 
 def main():
 #    content_ids = get_all_content_ids()
-    content_ids = TEST_CONTENTS
+#    content_ids = TEST_CONTENTS
+    content_ids = [('N49', '0x0001', '0x0001'),
+                   ('N849', '0x0001', '0x0001'),
+                   ('N5334', '0x0001', '0x0001'),
+                   ('N521580', '0x0001', '0x0001'),
+                   ('N346', '0x0001', '0x001c'),
+                   ('N21308', '0x0001', '0x0001')]
 
     if not content_ids:
         raise Exception('No contents!')
