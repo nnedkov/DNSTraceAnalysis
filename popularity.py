@@ -113,7 +113,7 @@ def main(separator='\t'):
     print 'writing results!'
     with open(popularity_filename + '.txt', 'a') as fp:
         for rec in final_recs:
-            fp.write('%s\t%s\t%s\t%f\t%f\n' % (rec[0], rec[1], rec[2], rec[3], rec[4]))
+            fp.write('%s\t%s\t%s\t%.20f\t%f\n' % (rec[0], rec[1], rec[2], rec[3], rec[4]))
 
 
 
