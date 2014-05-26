@@ -15,7 +15,7 @@ RUNNING_ON_HADOOP = False
 DEBUG_HADOOP = False
 SEPARATOR = '#'
 
-RESULTS_DIR = './new_results'
+RESULTS_DIR = './results'
 TEST_CONTENTS = [ ('N214', '0x0001', '0x0001'), \
                   ('N2062', '0x0001', '0x0001'), \
                   ('N838185', '0x0001', '0x0001'), \

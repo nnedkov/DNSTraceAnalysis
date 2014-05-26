@@ -43,3 +43,9 @@ reducer_run:	reducer_input.txt
 hadoop_run:	mapper_run reducer_run reducer_output.txt
 		python parser.py reducer_output.txt
 
+simulation:
+		cat input_0.txt | awk '{ print $1, "\t4"}' > input_temp.txt
+		cat input_1.txt | awk '{ print $1, "\t5"}' >> input_temp.txt
+		cat input_2.txt | awk '{ print $1, "\t6"}' >> input_temp.txt
+		cat input_3.txt | awk '{ print $1, "\t7"}' >> input_temp.txt
+		cat input_temp.txt | sort -k1,1 > input.txt
