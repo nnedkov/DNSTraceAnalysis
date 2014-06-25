@@ -6,7 +6,7 @@
 ####################################
 
 from config import TRACE_FILES_DIR, TRACE_FILES_NAME_PREFIX, \
-                   TRACE_FILES_NUMBER, VERBOSITY_IS_ON, TEST_CONTENTS, \
+                   TRACE_FILES_NUMBER, VERBOSITY_IS_ON, \
                    RESULTS_DIR
 
 from trace import Trace
@@ -80,7 +80,6 @@ def process_content(content_id):
 
 def main():
 #    content_ids = get_all_content_ids()
-#    content_ids = TEST_CONTENTS
     content_ids = [('N49', '0x0001', '0x0001'),
                    ('N849', '0x0001', '0x0001'),
                    ('N5334', '0x0001', '0x0001'),

@@ -5,7 +5,7 @@
 #   April 2014                     #
 ####################################
 
-from config import RESULTS_DIR, SEPARATOR, DEBUG_HADOOP, TEST_CONTENTS_STRINGS
+from config import RESULTS_DIR, SEPARATOR
 
 from trace import Trace
 from data_clustering import process_traces_for_content
@@ -35,9 +35,6 @@ def main(separator='\t'):
     for input_line in stdin:
         content, trace_str = input_line.strip().split(separator, 1)
         trace_str = separator.join(trace_str.split(SEPARATOR))
-
-        if DEBUG_HADOOP and content not in TEST_CONTENTS_STRINGS:
-            continue
 
 #        if not start:
 #            if content == 'N965487_0x0001_0x0001':

@@ -5,18 +5,18 @@
 #   April 2014		      #
 ###############################
 
-DNS_TRACE_FILES = ~/Inria/DNS_traces/dns2-sop-000 \
-		  ~/Inria/DNS_traces/dns2-sop-001 \
-		  ~/Inria/DNS_traces/dns2-sop-002 \
-		  ~/Inria/DNS_traces/dns2-sop-003 \
-		  ~/Inria/DNS_traces/dns2-sop-004 \
-		  ~/Inria/DNS_traces/dns2-sop-005 \
-		  ~/Inria/DNS_traces/dns2-sop-006 \
-		  ~/Inria/DNS_traces/dns2-sop-007 \
-		  ~/Inria/DNS_traces/dns2-sop-008
+DNS_TRACE_FILES = ~/Inria/DNS_trace/dns2-sop-000 \
+		  ~/Inria/DNS_trace/dns2-sop-001 \
+		  ~/Inria/DNS_trace/dns2-sop-002 \
+		  ~/Inria/DNS_trace/dns2-sop-003 \
+		  ~/Inria/DNS_trace/dns2-sop-004 \
+		  ~/Inria/DNS_trace/dns2-sop-005 \
+		  ~/Inria/DNS_trace/dns2-sop-006 \
+		  ~/Inria/DNS_trace/dns2-sop-007 \
+		  ~/Inria/DNS_trace/dns2-sop-008
 
 clean:
-	rm -rf *.pyc *~
+	rm -f *.pyc *~
 
 cleanall:	clean
 		rm -rf results logs
