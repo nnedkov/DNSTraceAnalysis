@@ -9,7 +9,7 @@ from config import RESULTS_DIR, SEPARATOR, DEBUG_HADOOP, TEST_CONTENTS_STRINGS
 
 from trace import Trace
 from data_clustering import process_traces_for_content
-from data_dumping import dump_data, dump_users
+from data_dumping import dump_data
 
 from sys import stdin
 
@@ -39,29 +39,9 @@ def main(separator='\t'):
         if DEBUG_HADOOP and content not in TEST_CONTENTS_STRINGS:
             continue
 
-        if content not in ['N353_0x0001_0x0001',
-                           'N354_0x0001_0x0001',
-                           'N658_0x0001_0x0001',
-                           'N7_0x0001_0x001c',
-                           'N297_0x0001_0x0001',
-                           'N18_0x0001_0x0001',
-                           'N627_0x0001_0x0001',
-                           'N920_0x0001_0x001c',
-                           'N417_0x0001_0x001c',
-                           'N311_0x0001_0x001c',
-                           'N538_0x0001_0x0001',
-                           'N222_0x0001_0x001c',
-                           'N412_0x0001_0x001c',
-                           'N682_0x0001_0x0001',
-                           'N1102_0x0001_0x001c',
-                           'N1101_0x0001_0x001c',
-                           'N1830_0x0001_0x0001',
-                           'N1829_0x0001_0x0001']:
-            continue
 #        if not start:
 #            if content == 'N965487_0x0001_0x0001':
 #                start = True
-#                # continue
 #            else:
 #                continue
 
@@ -108,6 +88,9 @@ def main(separator='\t'):
 
         if not is_valid:
             dump_data([message], filename)
+
+        print i
+        dump_data([str(last_content)], processed_contents_filename)
 
 
 if __name__ == '__main__':
