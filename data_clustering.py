@@ -7,7 +7,7 @@
 
 from config import TRACE_FILES_DIR, TRACE_FILES_NAME_PREFIX, \
                    TRACE_FILES_NUMBER, VERBOSITY_IS_ON, \
-                   RESULTS_DIR
+                   CLUST_RESULTS_DIR
 
 from trace import Trace
 from content import Content
@@ -90,7 +90,7 @@ def main():
     if not content_ids:
         raise Exception('No contents!')
 
-    filename = '%s/invalid_contents.log' % RESULTS_DIR
+    filename = '%s/invalid_contents.log' % CLUST_RESULTS_DIR
     all_int_users = set()
     all_ext_users = set()
 
@@ -111,9 +111,9 @@ def main():
         all_ext_users |= res['external_users']
 
     if all_int_users:
-        dump_users(all_int_users, RESULTS_DIR, is_internal_view=True)
+        dump_users(all_int_users, CLUST_RESULTS_DIR, is_internal_view=True)
     if all_ext_users:
-        dump_users(all_ext_users, RESULTS_DIR, is_internal_view=False)
+        dump_users(all_ext_users, CLUST_RESULTS_DIR, is_internal_view=False)
 
 
 if __name__ == '__main__':

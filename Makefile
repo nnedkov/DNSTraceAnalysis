@@ -1,35 +1,45 @@
-###############################
-#   Filename: Makefile        #
-#   Nedko Stefanov Nedkov     #
-#   nedko.nedkov@inria.fr     #
-#   April 2014		      #
-###############################
+#############################
+#   Filename: Makefile      #
+#   Nedko Stefanov Nedkov   #
+#   nedko.nedkov@inria.fr   #
+#   April 2014              #
+#############################
 
 DNS_TRACE_FILES = ~/Inria/DNS_trace/dns2-sop-000 \
-		  ~/Inria/DNS_trace/dns2-sop-001 \
-		  ~/Inria/DNS_trace/dns2-sop-002 \
-		  ~/Inria/DNS_trace/dns2-sop-003 \
-		  ~/Inria/DNS_trace/dns2-sop-004 \
-		  ~/Inria/DNS_trace/dns2-sop-005 \
-		  ~/Inria/DNS_trace/dns2-sop-006 \
-		  ~/Inria/DNS_trace/dns2-sop-007 \
-		  ~/Inria/DNS_trace/dns2-sop-008
+                  ~/Inria/DNS_trace/dns2-sop-001 \
+                  ~/Inria/DNS_trace/dns2-sop-002 \
+                  ~/Inria/DNS_trace/dns2-sop-003 \
+                  ~/Inria/DNS_trace/dns2-sop-004 \
+                  ~/Inria/DNS_trace/dns2-sop-005 \
+                  ~/Inria/DNS_trace/dns2-sop-006 \
+                  ~/Inria/DNS_trace/dns2-sop-007 \
+                  ~/Inria/DNS_trace/dns2-sop-008
 
 clean:
 	rm -f *.pyc *~
 
 cleanall:	clean
-		rm -rf results logs
+		rm -rf clustering_results analysis_results logs
 
 prepare:	cleanall
-		mkdir results
+		mkdir clustering_results analysis_results
+		sed -i 's/RUNNING_ON_HADOOP = True/RUNNING_ON_HADOOP = False/g' config.py
 
-run:	prepare
-	sed -i 's/RUNNING_ON_HADOOP = True/RUNNING_ON_HADOOP = False/g' config.py
-	python data_clustering.py
+runfew:		prepare
+		python data_clustering.py
 
-test:	results
-	./pre-commit.sh 4
+runall:		reducer_input.txt prepare
+		cat reducer_input.txt | python reducer.py
+
+analysis:	clustering_results
+		rm -rf analysis_results
+		mkdir analysis_results
+		python analysis.py > analysis_results/info.txt
+
+test:		clustering_results
+		./pre-commit.sh 4
+
+
 
 mapper_run:	prepare
 		sed -i 's/RUNNING_ON_HADOOP = False/RUNNING_ON_HADOOP = True/g' config.py

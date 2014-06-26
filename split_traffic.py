@@ -25,7 +25,7 @@ def main():
 
     user_requests = dict()
 
-    with open('./results/214/content_214_v4_0x0001/internal_view/req_arr_214_v4_0x0001.txt') as fp:
+    with open('./clustering_results/214/content_214_v4_0x0001/internal_view/req_arr_214_v4_0x0001.txt') as fp:
         for line in fp:
             user, secs = line.strip().split('\t')
             try:

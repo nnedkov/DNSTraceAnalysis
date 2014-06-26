@@ -101,17 +101,17 @@ function run_tests() {
 		key="${file%%:*}"
 		value="${file##*:}"
 		print "dark_green" "\n$key (internal) cluster for (214, v4, 0x0001):"
-		diff "results/214/content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" >/dev/null
+		diff "clustering_results/214/content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" >/dev/null
 		if (( $? == 1 )); then
 			print "red" "Not correct"
 			mkdir "logs" 2> /dev/null
-			diff "results/content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" > "logs/$value.diff"
+			diff "clustering_results/content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" > "logs/$value.diff"
 		else
 			echo "Correct"
 		fi
 	done
 	echo
-	CONTENT_DIRS=(`ls -d -1 ./results/**`)
+	CONTENT_DIRS=(`ls -d -1 ./clustering_results/**`)
 	for content_dir in ${CONTENT_DIRS[@]}; do
 		print "dark_green" "\nRunning tests on: $content_dir"
 		python tester.py $content_dir

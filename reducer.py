@@ -5,7 +5,7 @@
 #   April 2014                     #
 ####################################
 
-from config import RESULTS_DIR, SEPARATOR
+from config import ANALYSIS_RESULTS_DIR, SEPARATOR
 
 from trace import Trace
 from data_clustering import process_traces_for_content
@@ -27,8 +27,8 @@ def main(separator='\t'):
 
     last_content = None
     traces = list()
-    filename = '%s/invalid_contents.log' % RESULTS_DIR
-    processed_contents_filename = '%s/processed_contents.log' % RESULTS_DIR
+    filename = '%s/invalid_contents.log' % ANALYSIS_RESULTS_DIR
+    processed_contents_filename = '%s/processed_contents.log' % ANALYSIS_RESULTS_DIR
     i = 1
 #    start = False
 
