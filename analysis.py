@@ -1,9 +1,9 @@
-################################
-#   Filename: analysis.py      #
-#   Nedko Stefanov Nedkov      #
-#   nedko.nedkov@inria.fr      #
-#   April 2014                 #
-################################
+####################################
+#   Filename: analysis.py          #
+#   Nedko Stefanov Nedkov          #
+#   nedko.nedkov@inria.fr          #
+#   April 2014                     #
+####################################
 
 from config import ANALYSIS_RESULTS_DIR, CLUST_RESULTS_DIR, TRACE_DURATION
 

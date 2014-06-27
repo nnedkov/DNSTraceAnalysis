@@ -5,7 +5,7 @@
 #   April 2014                     #
 ####################################
 
-from config import RUNNING_ON_HADOOP, SEPARATOR
+from config import RUNNING_ON_HADOOP, SEPARATOR_2
 
 import os
 
@@ -13,8 +13,8 @@ import os
 
 def dump_data(output, filename):
     if RUNNING_ON_HADOOP:
-        separator = '\n%s%s' % (filename, SEPARATOR)
-        output = '%s%s%s\n' % (filename, SEPARATOR, separator.join(output))
+        separator = '\n%s%s' % (filename, SEPARATOR_2)
+        output = '%s%s%s\n' % (filename, SEPARATOR_2, separator.join(output))
         os.sys.stdout.write(output)
     else:
         output = '\n'.join(output) + '\n'

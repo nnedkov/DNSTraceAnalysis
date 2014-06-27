@@ -5,7 +5,7 @@
 #   April 2014                     #
 ####################################
 
-from config import SEPARATOR
+from config import SEPARATOR_1
 
 import sys, os
 
@@ -29,7 +29,7 @@ def main():
         output = list()
 
         for line in fp:
-            out_filepath, output_line = line.strip().split(SEPARATOR)
+            out_filepath, output_line = line.strip().split(SEPARATOR_1)
 
             if last_filepath is None:
                 last_filepath = out_filepath

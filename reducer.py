@@ -5,7 +5,7 @@
 #   April 2014                     #
 ####################################
 
-from config import ANALYSIS_RESULTS_DIR, SEPARATOR
+from config import ANALYSIS_RESULTS_DIR, SEPARATOR_1, SEPARATOR_2
 
 from trace import Trace
 from data_clustering import process_traces_for_content
@@ -15,7 +15,7 @@ from sys import stdin
 
 
 
-def main(separator='\t'):
+def main():
 
     def process_content(content, traces):
         content_id = tuple(content.split('_'))
@@ -33,8 +33,8 @@ def main(separator='\t'):
 #    start = False
 
     for input_line in stdin:
-        content, trace_str = input_line.strip().split(separator, 1)
-        trace_str = separator.join(trace_str.split(SEPARATOR))
+        content, trace_str = input_line.strip().split(SEPARATOR_1, 1)
+        trace_str = SEPARATOR_1.join(trace_str.split(SEPARATOR_2))
 
 #        if not start:
 #            if content == 'N965487_0x0001_0x0001':

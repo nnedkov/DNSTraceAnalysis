@@ -1,5 +1,5 @@
 ####################################
-#   Filename: time_converter.py    #
+#   Filename: time_conversion.py   #
 #   Nedko Stefanov Nedkov          #
 #   nedko.nedkov@inria.fr          #
 #   April 2014                     #
@@ -15,6 +15,6 @@ def convert_datetime_to_secs(datetime_str, ms_separator='.'):
     millisecs = datetime_str.split(ms_separator)[1]
     datetime = strptime(datetime_str, "%b %d, %Y %H:%M:%S.%f000")
     secs_since_epoch = timegm(datetime)
-    secs_since_epoch_with_ms = '%s.%s' % (secs_since_epoch, millisecs)
+    secs_since_epoch = '%s.%s' % (secs_since_epoch, millisecs)
 
-    return secs_since_epoch_with_ms
+    return secs_since_epoch

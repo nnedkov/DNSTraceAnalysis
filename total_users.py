@@ -1,9 +1,9 @@
-################################
-#   Filename: total_users.py   #
-#   Nedko Stefanov Nedkov      #
-#   nedko.nedkov@inria.fr      #
-#   May 2014                   #
-################################
+####################################
+#   Filename: total_users.py       #
+#   Nedko Stefanov Nedkov          #
+#   nedko.nedkov@inria.fr          #
+#   May 2014                       #
+####################################
 
 from config import ANALYSIS_RESULTS_DIR, CLUST_RESULTS_DIR
 

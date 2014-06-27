@@ -5,6 +5,8 @@
 #   April 2014                     #
 ####################################
 
+from config import SEPARATOR_1
+
 from os import sys, walk
 
 
@@ -46,7 +48,7 @@ def res_miss_cluster_is_valid(res_miss_cluster):
     return True, None
 
 
-def main(separator='\t'):
+def main():
 
     def load_res_cluster(filename):
         cluster = list()
@@ -54,7 +56,7 @@ def main(separator='\t'):
         with open(filename) as fp:
 
             for line in fp:
-                args = line.strip().split(separator)
+                args = line.strip().split(SEPARATOR_1)
                 secs = args[0]
                 ttl = args[1]
                 cluster.append((secs, ttl))

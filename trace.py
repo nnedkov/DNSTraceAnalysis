@@ -1,18 +1,20 @@
-####################################
-#   Filename: trace.py             #
-#   Nedko Stefanov Nedkov          #
-#   nedko.nedkov@inria.fr          #
-#   April 2014                     #
-####################################
+################################
+#   Filename: trace.py         #
+#   Nedko Stefanov Nedkov      #
+#   nedko.nedkov@inria.fr      #
+#   April 2014                 #
+################################
 
-from time_converter import convert_datetime_to_secs
+from config import SEPARATOR_1
+
+from time_conversion import convert_datetime_to_secs
 
 
 
 class Trace:
 
-    def __init__(self, trace_str, separator='\t'):
-        self.args = trace_str.strip().split(separator)
+    def __init__(self, trace_str):
+        self.args = trace_str.strip().split(SEPARATOR_1)
         self.domain_name = self.args[7]
         self.class_type = self.args[8]
         self.ip_version = self.args[9]
