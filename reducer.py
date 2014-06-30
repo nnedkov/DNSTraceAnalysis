@@ -9,7 +9,7 @@ from config import ANALYSIS_RESULTS_DIR, SEPARATOR_1, SEPARATOR_2
 
 from trace import Trace
 from data_clustering import process_traces_for_content
-from data_dumping import dump_data
+from output import dump_data
 
 from sys import stdin
 

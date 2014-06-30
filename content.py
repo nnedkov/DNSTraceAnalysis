@@ -8,7 +8,7 @@
 from config import CLUST_RESULTS_DIR
 
 from tester import res_miss_cluster_is_valid, res_arr_cluster_is_valid
-from data_dumping import dump_users, dump_cluster, dump_data
+from output import dump_users, dump_cluster, dump_data
 
 import traceback, os, shutil
 

@@ -11,7 +11,7 @@ from config import TRACE_FILES_DIR, TRACE_FILES_NAME_PREFIX, \
 
 from trace import Trace
 from content import Content
-from data_dumping import dump_data, dump_users
+from output import dump_data, dump_users
 
 import traceback
 

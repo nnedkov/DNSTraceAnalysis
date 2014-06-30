@@ -5,45 +5,49 @@
 #   April 2014                     #
 ####################################
 
-from config import SEPARATOR_1
+from config import SEPARATOR_2
 
-import sys, os
+import os, sys
 
 
 
 def main():
 
-    def write_it(filepath, output):
-        dirname = os.path.dirname(filepath)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
+    def flush_output(output, filepath):
+        dirpath = os.path.dirname(filepath)
+        if not os.path.isdir(dirpath):
+            os.makedirs(dirpath)
+
+        formatted_output = '%s%s' % ('\n'.join(output), '\n')
 
         with open(filepath, 'w') as fp:
-            fp.write('\n'.join(output) + '\n')
+            fp.write(formatted_output)
 
 
-    in_filename = sys.argv[1]
+    in_filepath = sys.argv[1]
 
-    with open(in_filename) as fp:
-        last_filepath = None
+    with open(in_filepath) as fp:
+
+        last_out_filepath = None
         output = list()
 
         for line in fp:
-            out_filepath, output_line = line.strip().split(SEPARATOR_1)
+            out_filepath, out_line = line.strip().split(SEPARATOR_2)
 
-            if last_filepath is None:
-                last_filepath = out_filepath
+            if last_out_filepath is None:
+                last_out_filepath = out_filepath
 
-            if last_filepath == out_filepath:
-                output.append(output_line)
+            if last_out_filepath == out_filepath:
+                output.append(out_line)
                 continue
 
-            write_it(last_filepath, output)
-            last_filepath = out_filepath
-            output = [output_line]
+            flush_output(output, last_out_filepath)
+            last_out_filepath = out_filepath
+            output = [out_line]
 
         if output:
-            write_it(last_filepath, output)
+            flush_output(output, last_out_filepath)
+
 
 
 if __name__ == '__main__':
