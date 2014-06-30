@@ -54,6 +54,7 @@ def get_content_name(dirpath, filename):
 
 def main():
 
+    total_users = set()
     analysis_filename_prefix = '%s/analysis_results' % ANALYSIS_RESULTS_DIR
 
     for root, _, filenames in walk(CLUST_RESULTS_DIR):
@@ -88,23 +89,22 @@ def main():
             ttl_values.append('>= %s' % max_ttl_value)
             assert ttl_values
 
-        users_num = len(get_users(path.join(root, users_filename)))
-        assert users_num != 0
+        users = get_users(path.join(root, users_filename))
+        assert users is not None and len(users) != 0
+        total_users |= users
 
         content_name = get_content_name(root, req_arr_filename)
 
         with open(analysis_filename_prefix + '_temp.txt', 'a') as fp:
 
-            s = '\t'.join(['%s']*5) + '\n'
+            s = '\t'.join(['%s']*4) + '\n'
             fp.write(s % (content_name,
                           req_arr_num,
                           req_miss_num,
-                          users_num,
                           str(ttl_values)))
 
     total_req_arr_num = 0
     total_req_miss_num = 0
-    total_users_num = 0
     recs = list()
 
     with open(analysis_filename_prefix + '_temp.txt') as fp:
@@ -115,29 +115,26 @@ def main():
             content_name = args[0]
             req_arr_num = int(args[1])
             req_miss_num = int(args[2])
-            users_num = int(args[3])
-            ttl_values = args[4]
+            ttl_values = args[3]
 
             total_req_arr_num += req_arr_num
             total_req_miss_num += req_miss_num
-            total_users_num += users_num
 
             rec = (content_name,
                    req_arr_num,
                    req_miss_num,
-                   users_num,
                    ttl_values)
 
             recs.append(rec)
 
     print 'Total number of req_arr: %s' % total_req_arr_num
     print 'Total number of req_miss: %s' % total_req_miss_num
-    print 'Total number of users: %s' % total_users_num
+    print 'Total number of users: %s' % len(total_users)
 
     final_recs = list()
 
     for rec in recs:
-        content_name, req_arr_num, req_miss_num, users_num, ttl_values = rec
+        content_name, req_arr_num, req_miss_num, ttl_values = rec
 
         req_arr_ratio = float(req_arr_num)/float(total_req_arr_num)
         req_miss_ratio = float(req_miss_num)/float(total_req_miss_num)
@@ -148,7 +145,6 @@ def main():
                      req_miss_num,
                      req_arr_ratio,
                      req_miss_ratio,
-                     users_num,
                      arrival_rate,
                      ttl_values)
 
