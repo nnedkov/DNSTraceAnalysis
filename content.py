@@ -68,7 +68,7 @@ class Content:
 
 
     def is_reffered_in_trace(self, trace):
-        if trace.content_id == self.raw_id:
+        if trace.content == self.raw_id:
             return True
 
         return False

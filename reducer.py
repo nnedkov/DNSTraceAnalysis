@@ -18,9 +18,11 @@ from sys import stdin
 def main():
 
     def process_content(content, traces):
-        content_id = tuple(content.split('_'))
-        traces = sorted(traces, key=lambda trace: trace.get_secs_value())
-        res = process_traces_for_content(content_id, traces)
+        content = tuple(content.split('_'))
+        for trace in traces:
+            trace.fill_out()
+        traces = sorted(traces, key=lambda trace: trace.secs)
+        res = process_traces_for_content(content, traces)
 
         return res
 

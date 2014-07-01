@@ -19,7 +19,7 @@ def main():
         trace = Trace(trace_str)
 
         output_trace_str = trace_str.strip().replace(SEPARATOR_1, SEPARATOR_2)
-        output_line = '%s_%s_%s%s%s\n' % (trace.domain_name, \
+        output_line = '%s_%s_%s%s%s\n' % (trace.hostname, \
                                           trace.class_type, \
                                           trace.ip_version, \
                                           SEPARATOR_1, \

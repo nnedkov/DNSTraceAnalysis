@@ -19,8 +19,8 @@ trace_files_path_prefix = '%s%s' % (TRACE_FILES_DIR, TRACE_FILES_NAME_PREFIX)
 
 
 
-def get_all_content_ids():
-    content_ids = set()
+def get_all_contents():
+    contents = set()
 
     for i in range(TRACE_FILES_NUMBER):
         trace_file = '%s%s' % (trace_files_path_prefix, str(i))
@@ -29,17 +29,17 @@ def get_all_content_ids():
 
             for trace_str in fp:
                 trace = Trace(trace_str)
-                content_ids.add(trace.content_id)
+                contents.add(trace.content)
 
-    content_ids = list(content_ids)
-    content_ids.remove(('N214', '0x0001', '0x0001'))
-    content_ids.insert(0, ('N214', '0x0001', '0x0001'))
+    contents = list(contents)
+    contents.remove(('N214', '0x0001', '0x0001'))
+    contents.insert(0, ('N214', '0x0001', '0x0001'))
 
-    return content_ids
+    return contents
 
 
-def process_traces_for_content(content_id, traces):
-    content = Content(content_id)
+def process_traces_for_content(content, traces):
+    content = Content(content)
 
     for trace in traces:
         process_next = content.process_trace(trace)
@@ -52,11 +52,11 @@ def process_traces_for_content(content_id, traces):
     return content.get_results()
 
 
-def process_content(content_id):
+def process_content(content):
     if VERBOSITY_IS_ON:
-        print 'Processing content with id %s:' % str(content_id)
+        print 'Processing content %s:' % str(content)
 
-    content = Content(content_id)
+    content = Content(content)
     traces = list()
 
     for i in range(TRACE_FILES_NUMBER):
@@ -73,35 +73,35 @@ def process_content(content_id):
                 if content.is_reffered_in_trace(trace):
                     traces.append(trace)
 
-    res = process_traces_for_content(content_id, traces)
+    res = process_traces_for_content(content, traces)
 
     return res
 
 
 def main():
-#    content_ids = get_all_content_ids()
-    content_ids = [('N49', '0x0001', '0x0001'),
-                   ('N849', '0x0001', '0x0001'),
-                   ('N5334', '0x0001', '0x0001'),
-                   ('N521580', '0x0001', '0x0001'),
-                   ('N346', '0x0001', '0x001c'),
-                   ('N21308', '0x0001', '0x0001')]
+#    contents = get_all_contents()
+    contents = [('N49', '0x0001', '0x0001'),
+                ('N849', '0x0001', '0x0001'),
+                ('N5334', '0x0001', '0x0001'),
+                ('N521580', '0x0001', '0x0001'),
+                ('N346', '0x0001', '0x001c'),
+                ('N21308', '0x0001', '0x0001')]
 
-    if not content_ids:
+    if not contents:
         raise Exception('No contents!')
 
     filename = '%s/invalid_contents.log' % CLUST_RESULTS_DIR
     all_int_users = set()
     all_ext_users = set()
 
-    for content_id in content_ids:
+    for content in contents:
         try:
-            is_valid, res = process_content(content_id)
+            is_valid, res = process_content(content)
             if not is_valid:
-                message = 'Invalid content: %s\n%s\n' % (str(content_id), res['message'])
+                message = 'Invalid content: %s\n%s\n' % (str(content), res['message'])
         except Exception:
             is_valid = False
-            message = 'Invalid content: %s\n%s\n' % (str(content_id), traceback.format_exc())
+            message = 'Invalid content: %s\n%s\n' % (str(content), traceback.format_exc())
 
         if not is_valid:
             dump_data([message], filename)
