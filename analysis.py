@@ -37,7 +37,7 @@ def get_ttl_values(filepath):
     ttl_values = set()
 
     with open(filepath) as fp:
-        ttl_values |= set([line.strip().split('\t')[1] for line in fp])
+        ttl_values |= set([int(line.strip().split('\t')[1]) for line in fp])
 
     return list(ttl_values)
 
