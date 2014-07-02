@@ -26,7 +26,7 @@ prepare:	cleanall
 		sed -i 's/RUNNING_ON_HADOOP = True/RUNNING_ON_HADOOP = False/g' config.py
 
 runfew:		prepare
-		python data_clustering.py
+		python clustering.py
 
 runall:		reducer_input.txt prepare
 		cat reducer_input.txt | python reducer.py

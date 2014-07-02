@@ -55,7 +55,7 @@ def get_content_name(dirpath, filename):
 def main():
 
     total_users = set()
-    analysis_filename_prefix = '%s/analysis_results' % ANALYSIS_RESULTS_DIR
+    analysis_filepath_prefix = '%s/analysis_results' % ANALYSIS_RESULTS_DIR
 
     for root, _, filenames in walk(CLUST_RESULTS_DIR):
         if not filenames or 'for_tests' in root:
@@ -95,7 +95,7 @@ def main():
 
         content_name = get_content_name(root, req_arr_filename)
 
-        with open(analysis_filename_prefix + '_temp.txt', 'a') as fp:
+        with open(analysis_filepath_prefix + '_temp.txt', 'a') as fp:
 
             s = '\t'.join(['%s']*4) + '\n'
             fp.write(s % (content_name,
@@ -107,7 +107,7 @@ def main():
     total_req_miss_num = 0
     recs = list()
 
-    with open(analysis_filename_prefix + '_temp.txt') as fp:
+    with open(analysis_filepath_prefix + '_temp.txt') as fp:
 
         for line in fp:
             args = line.strip().split('\t')
@@ -152,7 +152,7 @@ def main():
 
     final_recs = sorted(final_recs, key=itemgetter(1), reverse=True)
 
-    with open(analysis_filename_prefix + '.txt', 'a') as fp:
+    with open(analysis_filepath_prefix + '.txt', 'a') as fp:
 
         columns = ['content',
                    '#req_arr',
@@ -162,12 +162,10 @@ def main():
                    '#users',
                    'arrival rate',
                    'ttl(s)']
-        fp.write('#' + '\t'.join(columns) + '\n')
-
-        s = '%s\t%s\t%s\t%.10f\t%.10f\t%s\t%.5f\t%s\n'
+        fp.write('#%s\n' % '\t'.join(columns))
 
         for final_rec in final_recs:
-            fp.write(s % final_rec)
+            fp.write('%s\t%s\t%s\t%.10f\t%.10f\t%.5f\t%s\n' % final_rec)
 
 
 

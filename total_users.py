@@ -25,7 +25,9 @@ def get_users(filepath):
     return set(users)
 
 
+
 def main():
+
     invalid_dirs_log = '%s/invalid_dirs.log' % ANALYSIS_RESULTS_DIR
     total_users = set()
 
