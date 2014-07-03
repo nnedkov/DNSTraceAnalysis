@@ -8,8 +8,8 @@
 from config import ANALYSIS_RESULTS_DIR, SEPARATOR_1, SEPARATOR_2
 
 from trace import Trace
-from clustering import process_traces_for_content
 from output import dump_data
+from clustering import process_traces_for_content
 
 from sys import stdin
 
