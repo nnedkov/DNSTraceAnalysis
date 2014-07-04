@@ -48,6 +48,7 @@ def res_miss_cluster_is_valid(res_miss_cluster):
     return True, None
 
 
+
 def main():
 
     def load_res_cluster(filename):
@@ -87,6 +88,7 @@ def main():
                 print 'Success!'
             else:
                 print '%s : FAILURE!\t\t%s' % (filename, str(invalid_rec))
+
 
 
 if __name__ == '__main__':

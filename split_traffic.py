@@ -5,64 +5,76 @@
 #   April 2014                     #
 ####################################
 
+from config import USER_CLUSTERS_NUMBER, REQ_ARR_FILE_TO_SPLIT, SEPARATOR_1, \
+                   VERBOSITY_IS_ON, ANALYSIS_RESULTS_DIR
+
 from operator import itemgetter
 
 
 
-def main():
-    def get_next_turn(clusters_len):
-        lens = list()
-        for i in range(4):
-            try:
-                lens.append(clusters_len[i])
-            except KeyError:
-                return i
-        min_len = min(lens)
+def get_next_turn(user_clusters):
+    req_nums = list()
 
-        for i in range(4):
-            if clusters_len[i] == min_len:
-                return i
+    for i in range(USER_CLUSTERS_NUMBER):
+        try:
+            req_nums.append(user_clusters[i][1])
+        except KeyError:
+            return i
+
+    min_req_num = min(req_nums)
+
+    for i in range(USER_CLUSTERS_NUMBER):
+        if user_clusters[i][1] == min_req_num:
+            return i
+
+
+
+def main():
 
     user_requests = dict()
 
-    with open('./clustering_results/214/content_214_v4_0x0001/internal_view/req_arr_214_v4_0x0001.txt') as fp:
+    with open(REQ_ARR_FILE_TO_SPLIT) as fp:
+
         for line in fp:
-            user, secs = line.strip().split('\t')
+            user, request = line.strip().split(SEPARATOR_1)
             try:
-                user_requests[user].append(secs)
+                user_requests[user].append(request)
             except KeyError:
-                user_requests[user] = [secs]
+                user_requests[user] = [request]
 
-    user_requests_len = [(user, len(requests)) for user, requests in user_requests.iteritems()]
-    user_requests_len = sorted(user_requests_len, key=itemgetter(1), reverse=True)
+    user_requests_num = [(user, len(requests)) for user, requests in user_requests.iteritems()]
+    user_requests_num = sorted(user_requests_num, key=itemgetter(1), reverse=True)
     user_clusters = dict()
-    clusters_len = dict()
-    turn = 0
 
-    for user, requests_len in user_requests_len:
-        print user, requests_len
+    for user, requests_num in user_requests_num:
+        if VERBOSITY_IS_ON:
+            print 'User %s is issuing %s requests' % (user, requests_num)
+
+        turn = get_next_turn(user_clusters)
         try:
-            user_clusters[turn].append(user)
-            clusters_len[turn] += requests_len
+            user_clusters[turn][0].append(user)
+            user_clusters[turn][1] += requests_num
         except KeyError:
-            user_clusters[turn] = [user]
-            clusters_len[turn] = requests_len
+            user_clusters[turn] = ([user], requests_num)
 
-        turn = get_next_turn(clusters_len)
-
-    for i in range(4):
+    for i in range(USER_CLUSTERS_NUMBER):
+        users = user_clusters[i][0]
         requests = list()
 
-        for user in user_clusters[i]:
+        for user in users:
             requests += user_requests[user]
 
-        print '%s\t%s\t%s' % (i, len(requests), len(user_clusters[i]))
-
-        requests = sorted(requests)
+        sim_input_filepath = '%s/simulation_input_%s.txt' % (ANALYSIS_RESULTS_DIR, i)
 
         with open('input_%s.txt' % i, 'w') as fp:
-            for request in requests:
+
+            for request in sorted(requests):
                 fp.write('%s\n' % request)
+
+        if VERBOSITY_IS_ON:
+            print 'File %s has %s requests from %s different users' % (sim_input_filepath,
+                                                                       len(requests),
+                                                                       len(users))
 
 
 

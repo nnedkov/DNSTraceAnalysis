@@ -6,7 +6,9 @@
 ####################################
 
 from config import VERBOSITY_IS_ON, TRACE_FILES_NUMBER, TRACE_FILES_DIR, \
-                   TRACE_FILES_NAME_PREFIX, ANALYSIS_RESULTS_DIR
+                   TRACE_FILES_NAME_PREFIX, OUTPUT_USERS, \
+                   ANALYSIS_RESULTS_DIR, FEW_CONTENTS
+
 
 from content import Content
 from trace import Trace
@@ -14,7 +16,7 @@ from output import dump_data
 
 
 
-def process_traces_for_content(content, traces):
+def process_traces_for_content(content, traces, output_users=False):
     content = Content(content)
 
     for trace in traces:
@@ -23,7 +25,7 @@ def process_traces_for_content(content, traces):
         if not process_next:
             return content.get_results()
 
-    content.assert_and_dump_clusters()
+    content.assert_and_dump_clusters(output_users)
 
     return content.get_results()
 
@@ -50,7 +52,7 @@ def process_content(content):
                 if content_inst.is_reffered_in_trace(trace):
                     traces.append(trace)
 
-    res = process_traces_for_content(content, traces)
+    res = process_traces_for_content(content, traces, output_users=OUTPUT_USERS)
 
     return res
 
@@ -58,11 +60,9 @@ def process_content(content):
 
 def main():
 
-    contents = [('N214', '0x0001', '0x0001'),
-                ('N49', '0x0001', '0x0001')]
     invalid_contents_filename = '%s/invalid_contents.log' % ANALYSIS_RESULTS_DIR
 
-    for content in contents:
+    for content in FEW_CONTENTS:
         is_valid, res = process_content(content)
 
         if not is_valid:

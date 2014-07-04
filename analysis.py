@@ -5,9 +5,7 @@
 #   April 2014                     #
 ####################################
 
-from config import ANALYSIS_RESULTS_DIR, CLUST_RESULTS_DIR, TRACE_DURATION
-
-from total_users import get_users
+from config import ANALYSIS_RESULTS_DIR, CLUSTERING_RESULTS_DIR, TRACE_DURATION
 
 from os import walk, path
 from operator import itemgetter
@@ -42,6 +40,18 @@ def get_ttl_values(filepath):
     return list(ttl_values)
 
 
+def get_users(filepath):
+    users = list()
+
+    with open(filepath) as fp:
+        users += [line.strip() for line in fp]
+
+    if len(users) != len(set(users)):
+        return None
+
+    return set(users)
+
+
 def get_content_name(dirpath, filename):
     content_name = 'N' + filename.split('_', 2)[2].split('.')[0] + '_'
     view = dirpath.split('/')[4]
@@ -57,7 +67,7 @@ def main():
     total_users = set()
     analysis_filepath_prefix = '%s/analysis_results' % ANALYSIS_RESULTS_DIR
 
-    for root, _, filenames in walk(CLUST_RESULTS_DIR):
+    for root, _, filenames in walk(CLUSTERING_RESULTS_DIR):
         if not filenames or 'for_tests' in root:
             continue
 

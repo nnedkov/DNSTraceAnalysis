@@ -5,7 +5,7 @@
 #   April 2014                     #
 ####################################
 
-from config import CLUST_RESULTS_DIR
+from config import CLUSTERING_RESULTS_DIR
 
 from tester import res_miss_cluster_is_valid, res_arr_cluster_is_valid
 from output import dump_users, dump_cluster, dump_data
@@ -39,9 +39,9 @@ class Content:
         self.id = (self.domain_name, \
                    self.ip_version, \
                    self.class_type)
-        self.dir = '%s/%s/content_%s_%s_%s' % (CLUST_RESULTS_DIR, \
+        self.dir = '%s/%s/content_%s_%s_%s' % (CLUSTERING_RESULTS_DIR, \
                                                str(int(self.domain_name) % 50000), \
-                                       	       self.domain_name, \
+                                               self.domain_name, \
                                                self.ip_version, \
                                                self.class_type)
         if os.path.isdir(self.dir):
