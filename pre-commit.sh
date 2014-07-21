@@ -78,11 +78,11 @@ function delete_trail_whitespaces_modified_files() {
 ######################################################################################################
 # run pychecker on modified files
 
-function check_modified_files() {
+function pycheck_modified_files() {
 	print "blue" "\n*** Running pychecker on modified files ***"
 	FILES=(`git status | awk '$1 == "modified:" { print head$2 }' | grep .py`)
 	for file in ${FILES[@]}; do
-		print "dark_green" "\nPychecking modified file: $file\n"
+		print "dark_green" "\nPychecking file: $file\n"
 		pychecker $file
 	done
 	echo
@@ -130,7 +130,7 @@ if (( FLAGS[1] == 1 )); then
 fi
 
 if (( FLAGS[2] == 1 )); then
-	check_modified_files
+	pycheck_modified_files
 fi
 
 if (( FLAGS[3] == 1 )); then
