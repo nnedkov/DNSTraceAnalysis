@@ -10,7 +10,7 @@ from config import CLUSTERING_RESULTS_DIR
 from tester import res_miss_cluster_is_valid, res_arr_cluster_is_valid
 from output import dump_users, dump_cluster, dump_data
 
-import traceback, os, shutil
+import os, shutil, traceback
 
 
 
@@ -52,39 +52,39 @@ class Content:
 
         self.is_valid = True
         self.message = ''
-        self.traces_to_delete = list()
+        self.trace_recs_to_delete = list()
         self.transaction_status = dict()
         self.open_user_transactions = list()
-        self.int_view_traces = list()
-        self.int_view_pending_traces_queue = list()
-        self.ext_view_traces = list()
-        self.ext_view_pending_traces_queue = list()
+        self.int_view_trace_recs = list()
+        self.int_view_pending_trace_recs_queue = list()
+        self.ext_view_trace_recs = list()
+        self.ext_view_pending_trace_recs_queue = list()
         self.internal_users = set()
         self.external_users = set()
-        self.invalid_traces = list()
+        self.invalid_trace_recs = list()
 
         self.ooop_int = None
         self.ooop_ext = None
 
 
-    def is_reffered_in_trace(self, trace):
-        if trace.content == self.raw_id:
+    def is_reffered_in_trace_rec(self, trace_rec):
+        if trace_rec.content == self.raw_id:
             return True
 
         return False
 
 
-    def process_trace(self, trace):
-        trace.fill_out()
+    def process_trace_rec(self, trace_rec):
+        trace_rec.fill_out()
         process_next = True
 
-        if self.trace_is_duplicate(trace):
-            self.record_invalid_trace(trace)
+        if self.trace_rec_is_duplicate(trace_rec):
+            self.record_invalid_trace_rec(trace_rec)
 
             return process_next
 
         try:
-            self.record_trace(trace)
+            self.record_trace_rec(trace_rec)
         except Exception:
             self.is_valid = False
             self.message = traceback.format_exc()
@@ -111,238 +111,237 @@ class Content:
             self.is_valid = False
             self.message = traceback.format_exc()
 
-        if not self.int_view_traces and \
-           not self.int_view_pending_traces_queue and \
-           not self.ext_view_traces and \
-           not self.ext_view_pending_traces_queue:
+        if not self.int_view_trace_recs and \
+           not self.int_view_pending_trace_recs_queue and \
+           not self.ext_view_trace_recs and \
+           not self.ext_view_pending_trace_recs_queue:
             self.is_valid = False
             self.message = "It's empty!"
 
         if self.is_valid:
             self.dump_clusters_and_users()
-            self.dump_invalid_traces()
+            self.dump_invalid_trace_recs()
 
 
-    def trace_is_duplicate(self, trace):
+    def trace_rec_is_duplicate(self, trace_rec):
         # handling the req/res duplicates
         # (which carry the same transaction_id)
-        if trace.nameserver_is_dst:
-            if trace.transaction_id in self.transaction_status:
-                is_open, _, caution_data = self.transaction_status[trace.transaction_id]
+        if trace_rec.nameserver_is_dst:
+            if trace_rec.transaction_id in self.transaction_status:
+                is_open, _, caution_data = self.transaction_status[trace_rec.transaction_id]
                 cd_src, cd_secs = caution_data
 
-                if is_open and cd_src == trace.src and \
-                   float(trace.secs)-float(cd_secs) < 1:
+                if is_open and cd_src == trace_rec.src and \
+                   float(trace_rec.secs)-float(cd_secs) < 1:
                        return True
 
-                if not is_open and float(trace.secs)-float(cd_secs) < 1:
+                if not is_open and float(trace_rec.secs)-float(cd_secs) < 1:
                        return True
 
         else:
-            if trace.transaction_id in self.transaction_status:
-                is_open, _, caution_data = self.transaction_status[trace.transaction_id]
+            if trace_rec.transaction_id in self.transaction_status:
+                is_open, _, caution_data = self.transaction_status[trace_rec.transaction_id]
                 cd_src, cd_secs = caution_data
 
-                if not is_open and float(trace.secs)-float(cd_secs) < 1:
+                if not is_open and float(trace_rec.secs)-float(cd_secs) < 1:
                        return True
 
 
-    def record_invalid_trace(self, trace):
-        self.invalid_traces.append(trace.datetime)
+    def record_invalid_trace_rec(self, trace_rec):
+        self.invalid_trace_recs.append(trace_rec.datetime)
 
 
-    def record_trace(self, trace):
-#        print '%s --- %s\n%s\t%s\n%s\t%s\n' % (trace.datetime, trace.type, str([trac.datetime for trac, _ in self.ext_view_pending_traces_queue]), str([trac.datetime for trac in self.ext_view_traces]), str([trac.datetime for trac, _ in self.int_view_pending_traces_queue]), str([trac.datetime for trac in self.int_view_traces]))
-        if trace.type == 1:   # (1) req_arr
-            self.record_req_arr(trace)
-        elif trace.type == 2:   # (2) req_miss
-            self.record_req_miss(trace)
-        elif trace.type == 3:   # (3) res_miss
-            self.record_res_miss(trace)
-        elif trace.type == 4:   # (4) res_arr
-            self.record_res_arr(trace)
+    def record_trace_rec(self, trace_rec):
+        if trace_rec.type == 1:   # (1) req_arr
+            self.record_req_arr(trace_rec)
+        elif trace_rec.type == 2:   # (2) req_miss
+            self.record_req_miss(trace_rec)
+        elif trace_rec.type == 3:   # (3) res_miss
+            self.record_res_miss(trace_rec)
+        elif trace_rec.type == 4:   # (4) res_arr
+            self.record_res_arr(trace_rec)
 
 
-    def record_req_arr(self, trace):
+    def record_req_arr(self, trace_rec):
         # mapping
-        self.open_user_transactions.append([trace.src, trace.transaction_id, None])
+        self.open_user_transactions.append([trace_rec.src, trace_rec.transaction_id, None])
         is_open = True
-        is_internal = trace.src_is_internal
-        self.transaction_status[trace.transaction_id] = [is_open, is_internal, [trace.src, trace.secs]]
+        is_internal = trace_rec.src_is_internal
+        self.transaction_status[trace_rec.transaction_id] = [is_open, is_internal, [trace_rec.src, trace_rec.secs]]
 
         # writing
         pending = False
         if is_internal:
-            if not self.int_view_pending_traces_queue:
-                self.int_view_traces.append(trace)
+            if not self.int_view_pending_trace_recs_queue:
+                self.int_view_trace_recs.append(trace_rec)
             else:
-                self.int_view_pending_traces_queue.append([trace, pending])
+                self.int_view_pending_trace_recs_queue.append([trace_rec, pending])
         else:
-            if not self.ext_view_pending_traces_queue:
-                self.ext_view_traces.append(trace)
+            if not self.ext_view_pending_trace_recs_queue:
+                self.ext_view_trace_recs.append(trace_rec)
             else:
-                self.ext_view_pending_traces_queue.append([trace, pending])
+                self.ext_view_pending_trace_recs_queue.append([trace_rec, pending])
 
 
-    def record_req_miss(self, trace):
+    def record_req_miss(self, trace_rec):
         # mapping
         ass_open_user_transactions_num = len(set([True for _, _, ass_trans_id in self.open_user_transactions if ass_trans_id is None]))
         if ass_open_user_transactions_num == 0:
-            self.traces_to_delete.append(trace.transaction_id)
+            self.trace_recs_to_delete.append(trace_rec.transaction_id)
             return
         assert ass_open_user_transactions_num == 1
         last_open_transaction = self.open_user_transactions[-1]
         _, user_trans_id, ass_trans_id = last_open_transaction
         assert ass_trans_id is None
-        self.open_user_transactions[-1][2] = trace.transaction_id
+        self.open_user_transactions[-1][2] = trace_rec.transaction_id
         user_trans_is_open, user_trans_is_internal, _ = self.transaction_status[user_trans_id]
         assert user_trans_is_open
         is_open = True
         is_internal = user_trans_is_internal
-        self.transaction_status[trace.transaction_id] = [is_open, is_internal, [trace.src, trace.secs]]
+        self.transaction_status[trace_rec.transaction_id] = [is_open, is_internal, [trace_rec.src, trace_rec.secs]]
 
         # writing
         pending= True
         if is_internal:
-            self.int_view_pending_traces_queue.append([trace, pending])
+            self.int_view_pending_trace_recs_queue.append([trace_rec, pending])
         else:
-            self.ext_view_pending_traces_queue.append([trace, pending])
+            self.ext_view_pending_trace_recs_queue.append([trace_rec, pending])
 
 
-    def record_res_miss(self, trace):
+    def record_res_miss(self, trace_rec):
         # mapping
-        if self.traces_to_delete and trace.transaction_id in self.traces_to_delete:
-            self.traces_to_delete.remove(trace.transaction_id)
+        if self.trace_recs_to_delete and trace_rec.transaction_id in self.trace_recs_to_delete:
+            self.trace_recs_to_delete.remove(trace_rec.transaction_id)
             return
-        if trace.answers_num == 0:
+        if trace_rec.answers_num == 0:
             for j, open_user_trans in enumerate(self.open_user_transactions):
                 ass_trans_id = open_user_trans[2]
-                if ass_trans_id == trace.transaction_id:
+                if ass_trans_id == trace_rec.transaction_id:
                     self.open_user_transactions[j][2] = None
                     break
-        self.transaction_status[trace.transaction_id][0] = False
+        self.transaction_status[trace_rec.transaction_id][0] = False
 
         # writing
-        is_internal = self.transaction_status[trace.transaction_id][1]
-        if trace.answers_num == 0:
+        is_internal = self.transaction_status[trace_rec.transaction_id][1]
+        if trace_rec.answers_num == 0:
             if is_internal:
-                for pending_rec in list(self.int_view_pending_traces_queue):
-                    pending_trace, pending = pending_rec
-                    if trace.transaction_id == pending_trace.transaction_id:
+                for pending_rec in list(self.int_view_pending_trace_recs_queue):
+                    pending_trace_rec, pending = pending_rec
+                    if trace_rec.transaction_id == pending_trace_rec.transaction_id:
                         assert pending
-                        self.int_view_pending_traces_queue.remove(pending_rec)
-                        self.ooop_int = pending_trace
+                        self.int_view_pending_trace_recs_queue.remove(pending_rec)
+                        self.ooop_int = pending_trace_rec
                         break
             else:
-                for pending_rec in list(self.ext_view_pending_traces_queue):
-                    pending_trace, pending = pending_rec
-                    if trace.transaction_id == pending_trace.transaction_id:
+                for pending_rec in list(self.ext_view_pending_trace_recs_queue):
+                    pending_trace_rec, pending = pending_rec
+                    if trace_rec.transaction_id == pending_trace_rec.transaction_id:
                         assert pending
-                        self.ext_view_pending_traces_queue.remove(pending_rec)
-                        self.ooop_ext = pending_trace
+                        self.ext_view_pending_trace_recs_queue.remove(pending_rec)
+                        self.ooop_ext = pending_trace_rec
                         break
         else:
             if is_internal:
-                for pending_rec in self.int_view_pending_traces_queue:
-                    pending_trace = pending_rec[0]
-                    if trace.transaction_id == pending_trace.transaction_id:
+                for pending_rec in self.int_view_pending_trace_recs_queue:
+                    pending_trace_rec = pending_rec[0]
+                    if trace_rec.transaction_id == pending_trace_rec.transaction_id:
                         pending_rec[1] = False
                         self.ooop_int = None
                         break
                 pending = False
-                self.int_view_pending_traces_queue.append([trace, pending])
-                self.flush_buffer(self.int_view_pending_traces_queue, self.int_view_traces)
+                self.int_view_pending_trace_recs_queue.append([trace_rec, pending])
+                self.flush_buffer(self.int_view_pending_trace_recs_queue, self.int_view_trace_recs)
             else:
-                for pending_rec in self.ext_view_pending_traces_queue:
-                    pending_trace = pending_rec[0]
-                    if trace.transaction_id == pending_trace.transaction_id:
+                for pending_rec in self.ext_view_pending_trace_recs_queue:
+                    pending_trace_rec = pending_rec[0]
+                    if trace_rec.transaction_id == pending_trace_rec.transaction_id:
                         pending_rec[1] = False
                         self.ooop_ext = None
                         break
                 pending = False
-                self.ext_view_pending_traces_queue.append([trace, pending])
-                self.flush_buffer(self.ext_view_pending_traces_queue, self.ext_view_traces)
+                self.ext_view_pending_trace_recs_queue.append([trace_rec, pending])
+                self.flush_buffer(self.ext_view_pending_trace_recs_queue, self.ext_view_trace_recs)
 
 
-    def record_res_arr(self, trace):
+    def record_res_arr(self, trace_rec):
         # mapping
         for open_trans in list(self.open_user_transactions):
             user_src, user_trans_id, _ = open_trans
-            if user_src == trace.dst and user_trans_id == trace.transaction_id:
+            if user_src == trace_rec.dst and user_trans_id == trace_rec.transaction_id:
                 self.open_user_transactions.remove(open_trans)
-        self.transaction_status[trace.transaction_id][0] = False
-        self.transaction_status[trace.transaction_id][2][1] = trace.secs
+        self.transaction_status[trace_rec.transaction_id][0] = False
+        self.transaction_status[trace_rec.transaction_id][2][1] = trace_rec.secs
 
         # writing
-        is_internal = trace.dst_is_internal
+        is_internal = trace_rec.dst_is_internal
         if is_internal:
-            if not self.int_view_pending_traces_queue:
+            if not self.int_view_pending_trace_recs_queue:
                 if self.ooop_int is not None:
-                    self.int_view_traces.append(self.ooop_int)
+                    self.int_view_trace_recs.append(self.ooop_int)
                     self.ooop_int = None
-                self.int_view_traces.append(trace)
+                self.int_view_trace_recs.append(trace_rec)
             else:
-                for pending_rec in self.int_view_pending_traces_queue:
-                    pending_trace = pending_rec[0]
-                    if trace.transaction_id == pending_trace.transaction_id:
+                for pending_rec in self.int_view_pending_trace_recs_queue:
+                    pending_trace_rec = pending_rec[0]
+                    if trace_rec.transaction_id == pending_trace_rec.transaction_id:
                         pending_rec[1] = False
                         break
                 pending = False
                 if self.ooop_int is not None:
-                    self.int_view_pending_traces_queue.append([self.ooop_int, pending])
+                    self.int_view_pending_trace_recs_queue.append([self.ooop_int, pending])
                     self.ooop_int = None
-                self.int_view_pending_traces_queue.append([trace, pending])
-                self.flush_buffer(self.int_view_pending_traces_queue, self.int_view_traces)
+                self.int_view_pending_trace_recs_queue.append([trace_rec, pending])
+                self.flush_buffer(self.int_view_pending_trace_recs_queue, self.int_view_trace_recs)
 
         else:
-            if not self.ext_view_pending_traces_queue:
+            if not self.ext_view_pending_trace_recs_queue:
                 if self.ooop_ext is not None:
-                    self.ext_view_traces.append(self.ooop_ext)
+                    self.ext_view_trace_recs.append(self.ooop_ext)
                     self.ooop_ext = None
-                self.ext_view_traces.append(trace)
+                self.ext_view_trace_recs.append(trace_rec)
             else:
-                for pending_rec in self.ext_view_pending_traces_queue:
-                    pending_trace = pending_rec[0]
-                    if trace.transaction_id == pending_trace.transaction_id:
+                for pending_rec in self.ext_view_pending_trace_recs_queue:
+                    pending_trace_rec = pending_rec[0]
+                    if trace_rec.transaction_id == pending_trace_rec.transaction_id:
                         pending_rec[1] = False
                         break
                 pending = False
                 if self.ooop_ext is not None:
-                    self.ext_view_pending_traces_queue.append([self.ooop_ext, pending])
+                    self.ext_view_pending_trace_recs_queue.append([self.ooop_ext, pending])
                     self.ooop_ext = None
-                self.ext_view_pending_traces_queue.append([trace, pending])
-                self.flush_buffer(self.ext_view_pending_traces_queue, self.ext_view_traces)
+                self.ext_view_pending_trace_recs_queue.append([trace_rec, pending])
+                self.flush_buffer(self.ext_view_pending_trace_recs_queue, self.ext_view_trace_recs)
 
 
-    def flush_buffer(self, pending_traces_buffer, ready_traces, safe_mode=True):
-        for pending_rec in list(pending_traces_buffer):
-            trace, pending = pending_rec
+    def flush_buffer(self, pending_trace_recs_buffer, ready_trace_recs, safe_mode=True):
+        for pending_rec in list(pending_trace_recs_buffer):
+            trace_rec, pending = pending_rec
             if pending:
                 if safe_mode:
                     break
                 else:
-                    pending_traces_buffer.remove(pending_rec)
+                    pending_trace_recs_buffer.remove(pending_rec)
                     continue
 
-            ready_traces.append(trace)
-            pending_traces_buffer.remove(pending_rec)
+            ready_trace_recs.append(trace_rec)
+            pending_trace_recs_buffer.remove(pending_rec)
 
 
     def assert_clustered_data(self):
-        self.flush_buffer(self.int_view_pending_traces_queue, self.int_view_traces, safe_mode=False)
-        self.flush_buffer(self.ext_view_pending_traces_queue, self.ext_view_traces, safe_mode=False)
+        self.flush_buffer(self.int_view_pending_trace_recs_queue, self.int_view_trace_recs, safe_mode=False)
+        self.flush_buffer(self.ext_view_pending_trace_recs_queue, self.ext_view_trace_recs, safe_mode=False)
 
-        int_view_type_1_num = len([True for trace in self.int_view_traces if trace.type == 1])
-        #int_view_type_2_num = len([True for trace in self.int_view_traces if trace.type == 2])
-        int_view_type_3 = [(trace.secs, trace.ttl) for trace in self.int_view_traces if trace.type == 3]
-        int_view_type_4 = [(trace.secs, trace.ttl) for trace in self.int_view_traces if trace.type == 4]
+        int_view_type_1_num = len([True for trace_rec in self.int_view_trace_recs if trace_rec.type == 1])
+        #int_view_type_2_num = len([True for trace_rec in self.int_view_trace_recs if trace_rec.type == 2])
+        int_view_type_3 = [(trace_rec.secs, trace_rec.ttl) for trace_rec in self.int_view_trace_recs if trace_rec.type == 3]
+        int_view_type_4 = [(trace_rec.secs, trace_rec.ttl) for trace_rec in self.int_view_trace_recs if trace_rec.type == 4]
         #int_view_type_3_num = len(int_view_type_3)
         int_view_type_4_num = len(int_view_type_4)
 
-        ext_view_type_1_num = len([True for trace in self.ext_view_traces if trace.type == 1])
-        #ext_view_type_2_num = len([True for trace in self.ext_view_traces if trace.type == 2])
-        ext_view_type_3 = [(trace.secs, trace.ttl) for trace in self.ext_view_traces if trace.type == 3]
-        ext_view_type_4 = [(trace.secs, trace.ttl) for trace in self.ext_view_traces if trace.type == 4]
+        ext_view_type_1_num = len([True for trace_rec in self.ext_view_trace_recs if trace_rec.type == 1])
+        #ext_view_type_2_num = len([True for trace_rec in self.ext_view_trace_recs if trace_rec.type == 2])
+        ext_view_type_3 = [(trace_rec.secs, trace_rec.ttl) for trace_rec in self.ext_view_trace_recs if trace_rec.type == 3]
+        ext_view_type_4 = [(trace_rec.secs, trace_rec.ttl) for trace_rec in self.ext_view_trace_recs if trace_rec.type == 4]
         #ext_view_type_3_num = len(ext_view_type_3)
         ext_view_type_4_num = len(ext_view_type_4)
 
@@ -358,22 +357,22 @@ class Content:
 
 
     def dump_clusters_and_users(self):
-        if self.int_view_traces:
-            assert not self.int_view_pending_traces_queue, [trace.datetime for trace, _ in self.int_view_pending_traces_queue]
+        if self.int_view_trace_recs:
+            assert not self.int_view_pending_trace_recs_queue, [trace_rec.datetime for trace_rec, _ in self.int_view_pending_trace_recs_queue]
             is_internal_view = True
             self.dump_clusters(is_internal_view, self.dir)
-            self.internal_users = set([trace.node for trace in self.int_view_traces if trace.type == 1])
+            self.internal_users = set([trace_rec.node for trace_rec in self.int_view_trace_recs if trace_rec.type == 1])
             dump_users(self.internal_users, self.dir, is_internal_view)
 
             if self.id == ('214', 'v4', '0x0001'):
                 dir_for_tests = '%s/%s' % (self.dir, 'for_tests')
                 self.dump_clusters(is_internal_view, dir_for_tests, in_secs=False)
 
-        if self.ext_view_traces:
-            assert not self.ext_view_pending_traces_queue, [trace.datetime for trace, _ in self.ext_view_pending_traces_queue]
+        if self.ext_view_trace_recs:
+            assert not self.ext_view_pending_trace_recs_queue, [trace_rec.datetime for trace_rec, _ in self.ext_view_pending_trace_recs_queue]
             is_internal_view = False
             self.dump_clusters(is_internal_view, self.dir)
-            self.external_users = set([trace.node for trace in self.ext_view_traces if trace.type == 1])
+            self.external_users = set([trace_rec.node for trace_rec in self.ext_view_trace_recs if trace_rec.type == 1])
             dump_users(self.external_users, self.dir, is_internal_view)
 
 
@@ -383,16 +382,16 @@ class Content:
         if not os.path.isdir(res_dir):
             os.makedirs(res_dir)
 
-        traces = self.int_view_traces if is_internal_view else self.ext_view_traces
+        trace_recs = self.int_view_trace_recs if is_internal_view else self.ext_view_trace_recs
         clusters = dict()
 
-        for trace in traces:
+        for trace_rec in trace_recs:
             try:
-                if trace.type in [3, 4] and trace.ttl == 0:
+                if trace_rec.type in [3, 4] and trace_rec.ttl == 0:
                     continue
-                clusters[trace.type].append(trace)
+                clusters[trace_rec.type].append(trace_rec)
             except KeyError:
-                clusters[trace.type] = [trace]
+                clusters[trace_rec.type] = [trace_rec]
 
         filename_prefix = { 1: 'req_arr',
                             2: 'req_miss',
@@ -402,15 +401,15 @@ class Content:
                                         self.ip_version, \
                                         self.class_type)
 
-        for trace_type, cluster in clusters.iteritems():
+        for trace_rec_type, cluster in clusters.iteritems():
             if cluster:
                 filename = '%s/%s_%s.txt' % (res_dir, \
-                                             filename_prefix[trace_type], \
+                                             filename_prefix[trace_rec_type], \
                                              filename_suffix)
                 dump_cluster(cluster, filename, in_secs)
 
 
-    def dump_invalid_traces(self):
-        if self.invalid_traces:
-            filename = '%s/invalid_traces.log' % self.dir
-            dump_data(self.invalid_traces, filename)
+    def dump_invalid_trace_recs(self):
+        if self.invalid_trace_recs:
+            filename = '%s/invalid_trace_recs.log' % self.dir
+            dump_data(self.invalid_trace_recs, filename)

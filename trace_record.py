@@ -1,5 +1,5 @@
 ####################################
-#   Filename: trace.py             #
+#   Filename: trace_record.py      #
 #   Nedko Stefanov Nedkov          #
 #   nedko.nedkov@inria.fr          #
 #   April 2014                     #
@@ -11,10 +11,10 @@ from time_conversion import convert_datetime_to_secs
 
 
 
-class Trace:
+class Trace_rec:
 
-    def __init__(self, trace_str):
-        self.attributes = trace_str.strip().split(SEPARATOR_1)
+    def __init__(self, trace_rec_str):
+        self.attributes = trace_rec_str.strip().split(SEPARATOR_1)
         self.hostname = self.attributes[7]
         self.class_type = self.attributes[8]
         self.ip_version = self.attributes[9]

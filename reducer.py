@@ -7,19 +7,19 @@
 
 from config import ANALYSIS_RESULTS_DIR, SEPARATOR_1, SEPARATOR_2
 
-from trace import Trace
+from trace_record import Trace_rec
 from output import dump_data
-from clustering import process_traces_for_content
+from clustering import process_trace_recs_for_content
 
 from sys import stdin
 
 
 
-def process_and_log_content(content, traces):
+def process_and_log_content(content, trace_recs):
     invalid_contents_filename = '%s/invalid_contents.log' % ANALYSIS_RESULTS_DIR
     processed_contents_filename = '%s/processed_contents.log' % ANALYSIS_RESULTS_DIR
 
-    is_valid, res = process_content(content, traces)
+    is_valid, res = process_content(content, trace_recs)
 
     if not is_valid:
         message = 'Invalid content (%s): %s' % (content, res['message'])
@@ -28,14 +28,14 @@ def process_and_log_content(content, traces):
     dump_data([content], processed_contents_filename)
 
 
-def process_content(content, traces):
+def process_content(content, trace_recs):
     content = tuple(content.split('_'))
 
-    for trace in traces:
-        trace.fill_out()
+    for trace_rec in trace_recs:
+        trace_rec.fill_out()
 
-    traces = sorted(traces, key=lambda trace: trace.secs)
-    res = process_traces_for_content(content, traces)
+    trace_recs = sorted(trace_recs, key=lambda trace_rec: trace_rec.secs)
+    res = process_trace_recs_for_content(content, trace_recs)
 
     return res
 
@@ -44,27 +44,27 @@ def process_content(content, traces):
 def main():
 
     last_content = None
-    traces = list()
+    trace_recs = list()
 
     for input_line in stdin:
-        content, trace_str = input_line.strip().split(SEPARATOR_1, 1)
-        trace_str = trace_str.replace(SEPARATOR_2, SEPARATOR_1)
+        content, trace_rec_str = input_line.strip().split(SEPARATOR_1, 1)
+        trace_rec_str = trace_rec_str.replace(SEPARATOR_2, SEPARATOR_1)
 
-        trace = Trace(trace_str)
+        trace_rec = Trace_rec(trace_rec_str)
 
         if last_content is None:
             last_content = content
 
         if last_content == content:
-            traces.append(trace)
+            trace_recs.append(trace_rec)
             continue
 
-        process_and_log_content(last_content, traces)
+        process_and_log_content(last_content, trace_recs)
         last_content = content
-        traces = [trace]
+        trace_recs = [trace_rec]
 
-    if traces:
-        process_and_log_content(last_content, traces)
+    if trace_recs:
+        process_and_log_content(last_content, trace_recs)
 
 
 

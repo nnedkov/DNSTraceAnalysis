@@ -11,16 +11,16 @@ from config import VERBOSITY_IS_ON, TRACE_FILES_NUMBER, TRACE_FILES_DIR, \
 
 
 from content import Content
-from trace import Trace
+from trace_record import Trace_rec
 from output import dump_data
 
 
 
-def process_traces_for_content(content, traces, output_users=False):
+def process_trace_recs_for_content(content, trace_recs, output_users=False):
     content = Content(content)
 
-    for trace in traces:
-        process_next = content.process_trace(trace)
+    for trace_rec in trace_recs:
+        process_next = content.process_trace_rec(trace_rec)
 
         if not process_next:
             return content.get_results()
@@ -35,24 +35,24 @@ def process_content(content):
         print 'Processing content %s:' % str(content)
 
     content_inst = Content(content)
-    traces = list()
+    trace_recs = list()
 
     for tfn in range(TRACE_FILES_NUMBER):
         trace_filepath = '%s%s%s' % (TRACE_FILES_DIR,
                                      TRACE_FILES_NAME_PREFIX,
                                      tfn)
         if VERBOSITY_IS_ON:
-            print '\tFiltering traces from file %s' % trace_filepath
+            print '\tFiltering trace records from file %s' % trace_filepath
 
         with open(trace_filepath) as fp:
 
-            for trace_str in fp:
-                trace = Trace(trace_str)
+            for trace_rec_str in fp:
+                trace_rec = Trace_rec(trace_rec_str)
 
-                if content_inst.is_reffered_in_trace(trace):
-                    traces.append(trace)
+                if content_inst.is_reffered_in_trace_rec(trace_rec):
+                    trace_recs.append(trace_rec)
 
-    res = process_traces_for_content(content, traces, output_users=OUTPUT_USERS)
+    res = process_trace_recs_for_content(content, trace_recs, output_users=OUTPUT_USERS)
 
     return res
 

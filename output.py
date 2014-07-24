@@ -29,16 +29,16 @@ def dump_data(output, filepath):
 def dump_cluster(cluster, filepath, in_secs):
     output = list()
 
-    for trace in cluster:
+    for trace_rec in cluster:
         line = ''
 
         if in_secs:
-            line += trace.secs
+            line += trace_rec.secs
         else:
-            line += trace.datetime
+            line += trace_rec.datetime
 
-        if trace.ttl is not None:
-            line += '%s%s' % (SEPARATOR_1, trace.ttl)
+        if trace_rec.ttl is not None:
+            line += '%s%s' % (SEPARATOR_1, trace_rec.ttl)
 
         output.append(line)
 
