@@ -1,9 +1,9 @@
-####################################
-#   Filename: output.py            #
-#   Nedko Stefanov Nedkov          #
-#   nedko.nedkov@inria.fr          #
-#   April 2014                     #
-####################################
+#####################################
+#   Filename: output.py             #
+#   Nedko Stefanov Nedkov           #
+#   nedko.nedkov@inria.fr           #
+#   April 2014                      #
+#####################################
 
 from config import RUNNING_ON_HADOOP, SEPARATOR_2, SEPARATOR_1
 

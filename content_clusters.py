@@ -1,9 +1,9 @@
-####################################
-#   Filename: content.py           #
-#   Nedko Stefanov Nedkov          #
-#   nedko.nedkov@inria.fr          #
-#   April 2014                     #
-####################################
+#####################################
+#   Filename: content_clusters.py   #
+#   Nedko Stefanov Nedkov           #
+#   nedko.nedkov@inria.fr           #
+#   April 2014                      #
+#####################################
 
 from config import CLUSTERING_RESULTS_DIR
 
@@ -14,7 +14,7 @@ import os, shutil, traceback
 
 
 
-class Content:
+class Content_clusters:
 
     def __init__(self, content_id):
         self.raw_id = content_id
@@ -65,13 +65,6 @@ class Content:
 
         self.ooop_int = None
         self.ooop_ext = None
-
-
-    def is_reffered_in_trace_rec(self, trace_rec):
-        if trace_rec.content == self.raw_id:
-            return True
-
-        return False
 
 
     def process_trace_rec(self, trace_rec):

@@ -1,9 +1,9 @@
-####################################
-#   Filename: split_traffic.py     #
-#   Nedko Stefanov Nedkov          #
-#   nedko.nedkov@inria.fr          #
-#   April 2014                     #
-####################################
+#####################################
+#   Filename: split_traffic.py      #
+#   Nedko Stefanov Nedkov           #
+#   nedko.nedkov@inria.fr           #
+#   April 2014                      #
+#####################################
 
 from config import USER_CLUSTERS_NUMBER, REQ_ARR_FILE_TO_SPLIT, SEPARATOR_1, \
                    VERBOSITY_IS_ON, ANALYSIS_RESULTS_DIR

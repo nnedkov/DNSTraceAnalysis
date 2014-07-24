@@ -1,9 +1,9 @@
-####################################
-#   Filename: trace_record.py      #
-#   Nedko Stefanov Nedkov          #
-#   nedko.nedkov@inria.fr          #
-#   April 2014                     #
-####################################
+#####################################
+#   Filename: trace_record.py       #
+#   Nedko Stefanov Nedkov           #
+#   nedko.nedkov@inria.fr           #
+#   April 2014                      #
+#####################################
 
 from config import SEPARATOR_1, NAMESERVER_NAME
 
@@ -18,10 +18,17 @@ class Trace_rec:
         self.hostname = self.attributes[7]
         self.class_type = self.attributes[8]
         self.ip_version = self.attributes[9]
-        self.content = (self.hostname,
-                        self.class_type,
-                        self.ip_version)
+        self.content_id = (self.hostname,
+                           self.class_type,
+                           self.ip_version)
         self.is_filled_out = False
+
+
+    def is_referring_to_content(self, content_id):
+        if self.content_id == content_id:
+            return True
+
+        return False
 
 
     def fill_out(self):

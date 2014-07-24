@@ -1,9 +1,9 @@
-####################################
-#   Filename: time_conversion.py   #
-#   Nedko Stefanov Nedkov          #
-#   nedko.nedkov@inria.fr          #
-#   April 2014                     #
-####################################
+#####################################
+#   Filename: time_conversion.py    #
+#   Nedko Stefanov Nedkov           #
+#   nedko.nedkov@inria.fr           #
+#   April 2014                      #
+#####################################
 
 from time import strptime
 from calendar import timegm

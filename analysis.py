@@ -1,9 +1,9 @@
-####################################
-#   Filename: analysis.py          #
-#   Nedko Stefanov Nedkov          #
-#   nedko.nedkov@inria.fr          #
-#   April 2014                     #
-####################################
+#####################################
+#   Filename: analysis.py           #
+#   Nedko Stefanov Nedkov           #
+#   nedko.nedkov@inria.fr           #
+#   April 2014                      #
+#####################################
 
 from config import ANALYSIS_RESULTS_DIR, CLUSTERING_RESULTS_DIR, TRACE_DURATION
 
@@ -164,7 +164,7 @@ def main():
 
     with open(analysis_filepath_prefix + '.txt', 'a') as fp:
 
-        columns = ['content',
+        columns = ['content name',
                    '#req_arr',
                    '#req_miss',
                    '#req_arr ratio',
