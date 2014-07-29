@@ -1,10 +1,12 @@
-#############################
-#   Filename: Makefile      #
-#   Nedko Stefanov Nedkov   #
-#   nedko.nedkov@inria.fr   #
-#   April 2014              #
-#############################
+#######################################
+#   Filename: Makefile                #
+#   Nedko Stefanov Nedkov             #
+#   nedko.stefanov.nedkov@gmail.com   #
+#   April 2014                        #
+#######################################
 
+CLUSTERING_RESULTS_DIR = ./clustering_results
+ANALYSIS_RESULTS_DIR = ./analysis_results
 DNS_TRACE_FILES = ~/Inria/DNS_trace/dns2-sop-000 \
                   ~/Inria/DNS_trace/dns2-sop-001 \
                   ~/Inria/DNS_trace/dns2-sop-002 \
@@ -16,40 +18,37 @@ DNS_TRACE_FILES = ~/Inria/DNS_trace/dns2-sop-000 \
                   ~/Inria/DNS_trace/dns2-sop-008
 
 clean:
-	rm -f *.pyc *~
+		rm -f *.pyc *~
 
 cleanall:	clean
-		rm -rf clustering_results analysis_results logs
+		rm -rf $(CLUSTERING_RESULTS_DIR) $(ANALYSIS_RESULTS_DIR) logs
 
 prepare:	cleanall
-		mkdir clustering_results analysis_results
+		mkdir $(CLUSTERING_RESULTS_DIR) $(ANALYSIS_RESULTS_DIR)
 		sed -i 's/RUNNING_ON_HADOOP = True/RUNNING_ON_HADOOP = False/g' config.py
 
 runfew:		prepare
 		python clustering.py
 
-runall:		reducer_input.txt prepare
-		cat reducer_input.txt | python reducer.py
+mapper_run:
+		cat $(DNS_TRACE_FILES) | python mapper.py > unsorted_reducer_input.txt
+		sort -k1,1 unsorted_reducer_input.txt -o reducer_input.txt
 
-test:		clustering_results
+reducer_run:	reducer_input.txt prepare
+		python reducer.py
+
+runall:
+		mapper_run
+		reducer_run
+
+test:		$(CLUSTERING_RESULTS_DIR)
 		./pre-commit.sh 4
 
-analysis:	clustering_results
-		rm -rf analysis_results
-		mkdir analysis_results
-		python analysis.py > analysis_results/info.txt
+analysis:	$(CLUSTERING_RESULTS_DIR)
+		rm -rf $(ANALYSIS_RESULTS_DIR)
+		mkdir $(ANALYSIS_RESULTS_DIR)
+		python analysis.py > $(ANALYSIS_RESULTS_DIR)/info.txt
 
-mapper_run:	prepare
-		cat $(DNS_TRACE_FILES) | python mapper.py | sort -k1,1 > reducer_input.txt
-
-reducer_run:	reducer_input.txt
-		cat reducer_input.txt | python reducer.py > reducer_output.txt
-
-merge_traffic_files:	input_0.txt input_1.txt input_2.txt input_3.txt input_4.txt
-			cat input_0.txt | awk '{ print $1, "\t4"}' > input_temp.txt
-			cat input_1.txt | awk '{ print $1, "\t5"}' >> input_temp.txt
-			cat input_2.txt | awk '{ print $1, "\t6"}' >> input_temp.txt
-			cat input_3.txt | awk '{ print $1, "\t7"}' >> input_temp.txt
-			cat input_temp.txt | sort -k1,1 > input.txt
-			rm input_temp.txt
+split_traffic:	$(ANALYSIS_RESULTS_DIR)
+		python split_traffic.py
 

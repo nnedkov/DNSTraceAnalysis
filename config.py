@@ -1,9 +1,9 @@
-#####################################
-#   Filename: config.py             #
-#   Nedko Stefanov Nedkov           #
-#   nedko.nedkov@inria.fr           #
-#   April 2014                      #
-#####################################
+#######################################
+#   Filename: config.py               #
+#   Nedko Stefanov Nedkov             #
+#   nedko.stefanov.nedkov@gmail.com   #
+#   April 2014                        #
+#######################################
 
 TRACE_FILES_DIR = '/home/nedko/Inria/DNS_trace/'
 TRACE_FILES_NAME_PREFIX = 'dns2-sop-00'
@@ -15,6 +15,7 @@ SEPARATOR_2 = '#'
 
 CLUSTERING_RESULTS_DIR = './clustering_results'
 ANALYSIS_RESULTS_DIR = './analysis_results'
+CLUSTERING_RESULTS_SUBDIRS_NUM = 50000
 
 FEW_CONTENT_IDS = [('N214', '0x0001', '0x0001'),
                    ('N49', '0x0001', '0x0001')]
@@ -22,9 +23,9 @@ OUTPUT_USERS = False
 USER_CLUSTERS_NUMBER = 4
 REQ_ARR_FILE_TO_SPLIT = '%s/%s/%s/%s/%s' % (CLUSTERING_RESULTS_DIR,
                                             '214',
-                                            'content_214_v4_0x0001',
+                                            'content_214_0x0001_0x0001',
                                             'internal_view',
-                                            'req_arr_214_v4_0x0001.txt')
+                                            'req_arr_214_0x0001_0x0001.txt')
 
 VERBOSITY_IS_ON = True
 NAMESERVER_NAME = 'dns2-sop'

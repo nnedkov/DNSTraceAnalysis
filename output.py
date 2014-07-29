@@ -1,9 +1,9 @@
-#####################################
-#   Filename: output.py             #
-#   Nedko Stefanov Nedkov           #
-#   nedko.nedkov@inria.fr           #
-#   April 2014                      #
-#####################################
+#######################################
+#   Filename: output.py               #
+#   Nedko Stefanov Nedkov             #
+#   nedko.stefanov.nedkov@gmail.com   #
+#   April 2014                        #
+#######################################
 
 from config import RUNNING_ON_HADOOP, SEPARATOR_2, SEPARATOR_1
 
@@ -26,11 +26,14 @@ def dump_data(output, filepath):
             fp.write(formatted_output)
 
 
-def dump_cluster(cluster, filepath, in_secs):
+def dump_cluster(cluster, filepath, in_secs, output_users):
     output = list()
 
     for trace_rec in cluster:
         line = ''
+
+        if output_users:
+            line += '%s%s' % (trace_rec.node, SEPARATOR_1)
 
         if in_secs:
             line += trace_rec.secs
@@ -45,7 +48,7 @@ def dump_cluster(cluster, filepath, in_secs):
     dump_data(output, filepath)
 
 
-def dump_users(users, root_dirname, is_internal_view):
+def dump_users(users, root_dirname, is_internal_view=True):
     view_dirname = 'internal_view' if is_internal_view else 'external_view'
     dirpath = '%s/%s' % (root_dirname, view_dirname)
     if not os.path.isdir(dirpath):

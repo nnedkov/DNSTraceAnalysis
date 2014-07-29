@@ -1,11 +1,11 @@
 #!/bin/bash
 
-###############################
-#   Filename: pre-commit.sh   #
-#   Nedko Stefanov Nedkov     #
-#   nedko.nedkov@inria.fr     #
-#   April 2014		      #
-###############################
+#########################################
+#   Filename: pre-commit.sh             #
+#   Nedko Stefanov Nedkov               #
+#   nedko.stefanov.nedkov@gmail.com     #
+#   April 2014		                #
+#########################################
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -92,20 +92,20 @@ function pycheck_modified_files() {
 # run tests
 
 function run_tests() {
-	CLUSTER_FILES=("req_arr":"req_arr_214_v4_0x0001"
-		       "req_miss":"req_miss_214_v4_0x0001"
-		       "res_miss":"res_miss_214_v4_0x0001"
-		       "res_arr":"res_arr_214_v4_0x0001")
+	CLUSTER_FILES=("req_arr":"req_arr_214_0x0001_0x0001"
+		       "req_miss":"req_miss_214_0x0001_0x0001"
+		       "res_miss":"res_miss_214_0x0001_0x0001"
+		       "res_arr":"res_arr_214_0x0001_0x0001")
 	print "blue" "\n*** Running tests ***"
 	for file in ${CLUSTER_FILES[@]}; do
 		key="${file%%:*}"
 		value="${file##*:}"
-		print "dark_green" "\n$key (internal) cluster for (214, v4, 0x0001):"
-		diff "clustering_results/214/content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" >/dev/null
+		print "dark_green" "\n$key (internal) cluster for (214, 0x0001, 0x0001):"
+		diff "clustering_results/214/content_214_0x0001_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" >/dev/null
 		if (( $? == 1 )); then
 			print "red" "Not correct"
 			mkdir "logs" 2> /dev/null
-			diff "clustering_results/content_214_v4_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" > "logs/$value.diff"
+			diff "clustering_results/content_214_0x0001_0x0001/for_tests/internal_view/$value.txt" "/home/nedko/Inria/test/$value.txt" > "logs/$value.diff"
 		else
 			echo "Correct"
 		fi

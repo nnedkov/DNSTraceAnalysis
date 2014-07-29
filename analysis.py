@@ -1,9 +1,9 @@
-#####################################
-#   Filename: analysis.py           #
-#   Nedko Stefanov Nedkov           #
-#   nedko.nedkov@inria.fr           #
-#   April 2014                      #
-#####################################
+#######################################
+#   Filename: analysis.py             #
+#   Nedko Stefanov Nedkov             #
+#   nedko.stefanov.nedkov@gmail.com   #
+#   April 2014                        #
+#######################################
 
 from config import ANALYSIS_RESULTS_DIR, CLUSTERING_RESULTS_DIR, TRACE_DURATION
 
@@ -87,7 +87,8 @@ def main():
 
         req_miss_num = 0
         if req_miss_filename:
-            req_miss_num = get_number_of_lines(path.join(root, req_miss_filename))
+            req_miss_num = get_number_of_lines(path.join(root,
+                                                         req_miss_filename))
             assert req_miss_num != 0
 
         ttl_values = list()
@@ -95,7 +96,8 @@ def main():
             ttl_values = get_ttl_values(path.join(root, res_miss_filename))
             assert ttl_values
         elif res_arr_filename:
-            max_ttl_value = max(get_ttl_values(path.join(root, res_arr_filename)))
+            max_ttl_value = max(get_ttl_values(path.join(root,
+                                                         res_arr_filename)))
             ttl_values.append('>= %s' % max_ttl_value)
             assert ttl_values
 

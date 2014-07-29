@@ -1,9 +1,9 @@
-#####################################
-#   Filename: clustering.py         #
-#   Nedko Stefanov Nedkov           #
-#   nedko.nedkov@inria.fr           #
-#   April 2014                      #
-#####################################
+#######################################
+#   Filename: clustering.py           #
+#   Nedko Stefanov Nedkov             #
+#   nedko.stefanov.nedkov@gmail.com   #
+#   April 2014                        #
+#######################################
 
 from config import VERBOSITY_IS_ON, TRACE_FILES_NUMBER, TRACE_FILES_DIR, \
                    TRACE_FILES_NAME_PREFIX, OUTPUT_USERS, \
@@ -14,20 +14,22 @@ from content_clusters import Content_clusters
 from trace_record import Trace_rec
 from output import dump_data
 
+import traceback
+
 
 
 def process_trace_recs_for_content(content_id, trace_recs, output_users=False):
     content_clusters = Content_clusters(content_id)
 
     for trace_rec in trace_recs:
-        process_next_rec = content_clusters.process_trace_rec(trace_rec)
+        process_next_rec = content_clusters.process_rec(trace_rec)
 
         if not process_next_rec:
-            return content_clusters.get_results()
+            return content_clusters.get_outcome_status()
 
     content_clusters.assert_and_dump_clusters(output_users)
 
-    return content_clusters.get_results()
+    return content_clusters.get_outcome_status()
 
 
 def process_content(content_id):
@@ -51,9 +53,17 @@ def process_content(content_id):
                 if trace_rec.is_referring_to_content(content_id):
                     trace_recs.append(trace_rec)
 
-    res = process_trace_recs_for_content(content_id, trace_recs, output_users=OUTPUT_USERS)
 
-    return res
+    try:
+        is_valid, res = process_trace_recs_for_content(content_id,
+                                                       trace_recs,
+                                                       output_users=OUTPUT_USERS)
+    except Exception:
+        is_valid = False
+        res = {'outcome_message': traceback.format_exc()}
+        return is_valid, res
+
+    return is_valid, res
 
 
 
@@ -65,8 +75,9 @@ def main():
         is_valid, res = process_content(content_id)
 
         if not is_valid:
-            message = 'Invalid content id (%s):\n%s\n' % (str(content_id),
-                                                          res['message'])
+            message = 'Invalid content id (%s):\n%s\n' % \
+                      (str(content_id),
+                       res['outcome_message'])
             dump_data([message], invalid_cids_filename)
 
 

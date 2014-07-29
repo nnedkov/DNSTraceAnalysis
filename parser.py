@@ -1,9 +1,9 @@
-#####################################
-#   Filename: parser.py             #
-#   Nedko Stefanov Nedkov           #
-#   nedko.nedkov@inria.fr           #
-#   April 2014                      #
-#####################################
+#######################################
+#   Filename: parser.py               #
+#   Nedko Stefanov Nedkov             #
+#   nedko.stefanov.nedkov@gmail.com   #
+#   April 2014                        #
+#######################################
 
 from config import SEPARATOR_2
 
